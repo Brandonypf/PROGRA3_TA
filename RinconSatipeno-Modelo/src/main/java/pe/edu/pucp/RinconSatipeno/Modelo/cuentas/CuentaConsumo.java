@@ -9,6 +9,26 @@ public class CuentaConsumo {
     private LocalDate fechaCierre;
     private EstadoCuenta estado;
     private double montoTotalPagar;
+    private Mesa mesa;
+    private Mozo mozo;
+
+    public Mozo getMozo() {
+        return new Mozo(mozo);
+    }
+
+    public void setMozo(Mozo mozo) {
+        if(mozo ==null)throw new IllegalArgumentException("mozo no puede ser nula");
+        this.mozo=new Mozo(mozo);
+    }
+
+    public Mesa getMesa() {
+        return new Mesa(mesa);
+    }
+
+    public void setMesa(Mesa mesa) {
+        if(mesa ==null)throw new IllegalArgumentException("mesa no puede ser nula");
+        this.mesa=new Mesa(mesa);
+    }
 
     public CuentaConsumo() {
     }
@@ -21,6 +41,8 @@ public class CuentaConsumo {
         setFechaCierre(cuentaConsumo.getFechaCierre());
         setEstado(cuentaConsumo.getEstado());
         setMontoTotalPagar(cuentaConsumo.getMontoTotalPagar());
+        setMesa(cuentaConsumo.getMesa());
+        setMozo(cuentaConsumo.getMozo());
     }
 
     public int getIdCuenta() {

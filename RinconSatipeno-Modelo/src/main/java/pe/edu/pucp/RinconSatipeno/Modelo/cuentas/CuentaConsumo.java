@@ -1,5 +1,7 @@
 package pe.edu.pucp.RinconSatipeno.Modelo.cuentas;
 
+import pe.edu.pucp.RinconSatipeno.Modelo.empleados.Mozo;
+import pe.edu.pucp.RinconSatipeno.Modelo.mesas.Mesa;
 
 import java.time.LocalDate;
 

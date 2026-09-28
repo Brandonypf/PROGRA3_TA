@@ -5,6 +5,7 @@ import pe.edu.pucp.RinconSatipeno.Modelo.platos.Plato;
 public class DetallePedido {
     private int idDetalle;
     private int cantidadPlatos;
+    private double precioUnitario;
     private double subtotal;
     private Plato plato;
 
@@ -17,6 +18,7 @@ public class DetallePedido {
         }
         setIdDetalle(detallePedido.getIdDetalle());
         setCantidadPlatos(detallePedido.getCantidadPlatos());
+        setPrecioUnitario(detallePedido.getPrecioUnitario());
         setSubtotal(detallePedido.getSubtotal());
         setPlato(detallePedido.getPlato());
     }
@@ -43,6 +45,17 @@ public class DetallePedido {
         this.cantidadPlatos = cantidadPlatos;
     }
 
+    public double getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    public void setPrecioUnitario(double precioUnitario) {
+        if (precioUnitario < 0) {
+            throw new IllegalArgumentException("precioUnitario no puede ser negativo");
+        }
+        this.precioUnitario = precioUnitario;
+    }
+
     public double getSubtotal() {
         return subtotal;
     }
@@ -55,7 +68,10 @@ public class DetallePedido {
     }
 
     public Plato getPlato() {
-        return new Plato(plato);
+        if (plato != null) {
+            return new Plato(plato);
+        }
+        return null;
     }
 
     public void setPlato(Plato plato) {

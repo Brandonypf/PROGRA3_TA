@@ -1,7 +1,12 @@
 -- ============================================
--- SCRIPT BASE DE DATOS: EL RINCÓN SATIPEÑO
--- Orden: 1. DROPS | 2. CREATES | 3. INSERTS
+-- SCRIPT BASE DE DATOS: EL RINCÓN SATIPEÑO (v3.4 FINAL)
+-- Ajuste final: datos_contacto normalizado e id_reserva opcional en cuenta_consumo
+-- Orden: 0. BD | 1. DROPS | 2. CREATES | 3. INSERTS
+-- Motor: MySQL 8.0.16+
 -- ============================================
+
+CREATE DATABASE IF NOT EXISTS rincon_satipeno;
+USE rincon_satipeno;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -12,13 +17,16 @@ DROP TABLE IF EXISTS detalle_pedido;
 DROP TABLE IF EXISTS pedido;
 DROP TABLE IF EXISTS cuenta_consumo;
 DROP TABLE IF EXISTS reserva;
+DROP TABLE IF EXISTS datos_contacto;
 DROP TABLE IF EXISTS plato;
 DROP TABLE IF EXISTS receta_insumo;
 DROP TABLE IF EXISTS receta;
 DROP TABLE IF EXISTS movimiento_inventario;
 DROP TABLE IF EXISTS insumo;
 DROP TABLE IF EXISTS mesa;
-DROP TABLE IF EXISTS empleado;
+DROP TABLE IF EXISTS mozo;
+DROP TABLE IF EXISTS administrador;
+DROP TABLE IF EXISTS cuenta_acceso;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -26,26 +34,50 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 2. SENTENCIAS CREATE TABLE
 -- ============================================
 
--- 1. Tabla: Empleado
-CREATE TABLE empleado (
-                          id_empleado INT NOT NULL AUTO_INCREMENT,
-                          nombre VARCHAR(100) NOT NULL,
-                          email VARCHAR(100) NOT NULL,
-                          telefono VARCHAR(15) NOT NULL,
-                          contrasenia VARCHAR(255) NOT NULL,
-                          estado ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
-                          turno ENUM('MANANA', 'TARDE', 'NOCHE') NOT NULL,
-                          fecha_contratacion DATE NOT NULL,
-                          tipo_empleado ENUM('ADMINISTRADOR', 'MOZO') NOT NULL,
-                          PRIMARY KEY (id_empleado),
-                          CONSTRAINT uk_empleado_email UNIQUE (email)
+-- 1. Tabla: CuentaAcceso
+CREATE TABLE cuenta_acceso (
+                               id_cuenta_acceso INT NOT NULL AUTO_INCREMENT,
+                               email VARCHAR(100) NOT NULL,
+                               contrasenia VARCHAR(255) NOT NULL,
+                               estado ENUM('ACTIVO', 'INACTIVO', 'INACTIVO_TEMPORAL') NOT NULL DEFAULT 'ACTIVO',
+                               PRIMARY KEY (id_cuenta_acceso),
+                               CONSTRAINT UQ_cuentaacceso_email UNIQUE (email)
 );
 
--- 2. Tabla: Mesa
+-- 2. Tabla: Administrador
+CREATE TABLE administrador (
+                               id_administrador INT NOT NULL AUTO_INCREMENT,
+                               nombre VARCHAR(100) NOT NULL,
+                               telefono VARCHAR(15) NOT NULL,
+                               fecha_contratacion DATE NOT NULL,
+                               id_cuenta_acceso INT NOT NULL,
+                               PRIMARY KEY (id_administrador),
+                               CONSTRAINT UQ_administrador_cuentaacceso UNIQUE (id_cuenta_acceso),
+                               CONSTRAINT FK_administrador_cuentaacceso
+                                   FOREIGN KEY (id_cuenta_acceso) REFERENCES cuenta_acceso(id_cuenta_acceso)
+);
+
+-- 3. Tabla: Mozo
+CREATE TABLE mozo (
+                      id_mozo INT NOT NULL AUTO_INCREMENT,
+                      nombre VARCHAR(100) NOT NULL,
+                      telefono VARCHAR(15) NOT NULL,
+                      fecha_contratacion DATE NOT NULL,
+                      turno ENUM('MANANA', 'TARDE', 'NOCHE') NOT NULL,
+                      zona ENUM('SALON_PRINCIPAL', 'TERRAZA') NOT NULL,
+                      id_cuenta_acceso INT NOT NULL,
+                      PRIMARY KEY (id_mozo),
+                      CONSTRAINT UQ_mozo_cuentaacceso UNIQUE (id_cuenta_acceso),
+                      CONSTRAINT FK_mozo_cuentaacceso
+                          FOREIGN KEY (id_cuenta_acceso) REFERENCES cuenta_acceso(id_cuenta_acceso)
+);
+
+-- 4. Tabla: Mesa
 CREATE TABLE mesa (
                       id_mesa INT NOT NULL AUTO_INCREMENT,
                       numero INT NOT NULL,
                       capacidad INT NOT NULL,
+                      zona ENUM('SALON_PRINCIPAL', 'TERRAZA') NOT NULL,
                       estado ENUM('LIBRE', 'OCUPADA', 'RESERVADA') NOT NULL DEFAULT 'LIBRE',
                       PRIMARY KEY (id_mesa),
                       CONSTRAINT UQ_mesa_numero UNIQUE (numero),
@@ -53,7 +85,7 @@ CREATE TABLE mesa (
                       CONSTRAINT CK_mesa_capacidad CHECK (capacidad > 0)
 );
 
--- 3. Tabla: Insumo
+-- 5. Tabla: Insumo
 CREATE TABLE insumo (
                         id_insumo INT NOT NULL AUTO_INCREMENT,
                         nombre VARCHAR(100) NOT NULL,
@@ -65,11 +97,11 @@ CREATE TABLE insumo (
                         CONSTRAINT CK_insumo_stock_minimo CHECK (stock_minimo >= 0)
 );
 
--- 4. Tabla: MovimientoInventario
+-- 6. Tabla: MovimientoInventario
 CREATE TABLE movimiento_inventario (
                                        id_movimiento INT NOT NULL AUTO_INCREMENT,
                                        id_insumo INT NOT NULL,
-                                       tipo_movimiento ENUM('ENTRADA', 'SALIDA_CONSUMO', 'AJUSTE') NOT NULL,
+                                       tipo_movimiento ENUM('ENTRADA', 'SALIDA') NOT NULL,
                                        cantidad DECIMAL(10,2) NOT NULL,
                                        fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                        PRIMARY KEY (id_movimiento),
@@ -78,14 +110,14 @@ CREATE TABLE movimiento_inventario (
                                        CONSTRAINT CK_movimiento_cantidad CHECK (cantidad > 0)
 );
 
--- 5. Tabla: Receta
+-- 7. Tabla: Receta
 CREATE TABLE receta (
                         id_receta INT NOT NULL AUTO_INCREMENT,
-                        descripcion VARCHAR(255),
+                        descripcion VARCHAR(255) NOT NULL,
                         PRIMARY KEY (id_receta)
 );
 
--- 6. Tabla: RecetaInsumo
+-- 8. Tabla: RecetaInsumo
 CREATE TABLE receta_insumo (
                                id_receta INT NOT NULL,
                                id_insumo INT NOT NULL,
@@ -95,16 +127,16 @@ CREATE TABLE receta_insumo (
                                    FOREIGN KEY (id_receta) REFERENCES receta(id_receta),
                                CONSTRAINT FK_recetainsumo_insumo
                                    FOREIGN KEY (id_insumo) REFERENCES insumo(id_insumo),
-                               CONSTRAINT CK_receta_insumo_cantidad_req CHECK (cantidad_requerida > 0)
+                               CONSTRAINT CK_recetainsumo_cantidad CHECK (cantidad_requerida > 0)
 );
 
--- 7. Tabla: Plato (Categorías alineadas con la aplicación)
+-- 9. Tabla: Plato
 CREATE TABLE plato (
                        id_plato INT NOT NULL AUTO_INCREMENT,
                        nombre VARCHAR(100) NOT NULL,
                        precio DECIMAL(10,2) NOT NULL,
-                       categoria ENUM('ENTRADA', 'PLATO_FONDO', 'PLATOS_FUERTES', 'POSTRE', 'BEBIDA') NOT NULL,
-                       descripcion VARCHAR(255),
+                       categoria ENUM('ENTRADA', 'PLATO_FONDO', 'POSTRE', 'BEBIDA') NOT NULL,
+                       descripcion VARCHAR(255) NOT NULL,
                        id_receta INT NOT NULL,
                        PRIMARY KEY (id_plato),
                        CONSTRAINT FK_plato_receta
@@ -112,53 +144,97 @@ CREATE TABLE plato (
                        CONSTRAINT CK_plato_precio CHECK (precio >= 0)
 );
 
--- 8. Tabla: Reserva
-CREATE TABLE reserva (
-                         id_reserva INT NOT NULL AUTO_INCREMENT,
-                         fecha_reserva DATETIME NOT NULL,
-                         cantidad_personas INT NOT NULL,
-                         estado ENUM('CONFIRMADA', 'CANCELADA') NOT NULL DEFAULT 'CONFIRMADA',
-                         id_mesa INT NOT NULL,
-                         PRIMARY KEY (id_reserva),
-                         CONSTRAINT FK_reserva_mesa
-                             FOREIGN KEY (id_mesa) REFERENCES mesa(id_mesa)
+-- 10. Tabla: DatosContacto (Mapeo de la clase DatosContacto)
+CREATE TABLE datos_contacto (
+                                id_contacto INT NOT NULL AUTO_INCREMENT,
+                                nombre VARCHAR(100) NOT NULL,
+                                telefono VARCHAR(15) NOT NULL,
+                                correo VARCHAR(100) NOT NULL,
+                                PRIMARY KEY (id_contacto)
 );
 
--- 9. Tabla: CuentaConsumo
+-- 11. Tabla: Reserva (Relacionada con DatosContacto mediante FK)
+CREATE TABLE reserva (
+                         id_reserva INT NOT NULL AUTO_INCREMENT,
+                         fecha DATE NOT NULL,
+                         hora_inicio TIME NOT NULL,
+                         hora_fin TIME NOT NULL,
+                         cantidad_personas INT NOT NULL,
+                         estado ENUM('PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'COMPLETADA') NOT NULL DEFAULT 'PENDIENTE',
+                         codigo_acceso VARCHAR(64) NOT NULL,
+                         id_mesa INT NOT NULL,
+                         id_contacto INT NOT NULL,
+                         PRIMARY KEY (id_reserva),
+                         CONSTRAINT UQ_reserva_codigoacceso UNIQUE (codigo_acceso),
+                         CONSTRAINT FK_reserva_mesa
+                             FOREIGN KEY (id_mesa) REFERENCES mesa(id_mesa),
+                         CONSTRAINT FK_reserva_datoscontacto
+                             FOREIGN KEY (id_contacto) REFERENCES datos_contacto(id_contacto),
+                         CONSTRAINT CK_reserva_personas CHECK (cantidad_personas > 0),
+                         CONSTRAINT CK_reserva_horas CHECK (hora_fin > hora_inicio),
+                         CONSTRAINT CK_reserva_maxduracion
+                             CHECK (TIME_TO_SEC(hora_fin) - TIME_TO_SEC(hora_inicio) <= 7200)
+);
+
+-- 12. Tabla: CuentaConsumo
 CREATE TABLE cuenta_consumo (
                                 id_cuenta INT NOT NULL AUTO_INCREMENT,
                                 fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                fecha_cierre DATETIME,
-                                estado ENUM('ABIERTA', 'CERRADA', 'PAGADA') NOT NULL DEFAULT 'ABIERTA',
+                                fecha_cierre DATETIME NULL,
+                                fecha_pago DATETIME NULL,
+                                estado ENUM('ABIERTA', 'PAGADA', 'CERRADA') NOT NULL DEFAULT 'ABIERTA',
                                 monto_total_pagar DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                                enlace_pago CHAR(36) NULL,
                                 id_mesa INT NOT NULL,
                                 id_mozo INT NOT NULL,
+                                id_reserva INT NULL,
                                 PRIMARY KEY (id_cuenta),
+                                CONSTRAINT UQ_cuentaconsumo_enlacepago UNIQUE (enlace_pago),
                                 CONSTRAINT FK_cuentaconsumo_mesa
                                     FOREIGN KEY (id_mesa) REFERENCES mesa(id_mesa),
                                 CONSTRAINT FK_cuentaconsumo_mozo
-                                    FOREIGN KEY (id_mozo) REFERENCES empleado(id_empleado),
-                                CONSTRAINT CK_cuentaconsumo_monto CHECK (monto_total_pagar >= 0)
+                                    FOREIGN KEY (id_mozo) REFERENCES mozo(id_mozo),
+                                CONSTRAINT FK_cuentaconsumo_reserva
+                                    FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva),
+                                CONSTRAINT CK_cuentaconsumo_monto
+                                    CHECK (monto_total_pagar >= 0),
+                                CONSTRAINT CK_cuentaconsumo_pago
+                                    CHECK (fecha_pago IS NULL OR fecha_pago >= fecha_apertura),
+                                CONSTRAINT CK_cuentaconsumo_cierre
+                                    CHECK (fecha_cierre IS NULL OR fecha_cierre >= fecha_apertura),
+                                CONSTRAINT CK_cuentaconsumo_cierre_pago
+                                    CHECK (
+                                        fecha_cierre IS NULL
+                                            OR fecha_pago IS NULL
+                                            OR fecha_cierre >= fecha_pago
+                                        ),
+                                CONSTRAINT CK_cuentaconsumo_estado_fechas
+                                    CHECK (
+                                        (estado = 'ABIERTA'
+                                            AND fecha_pago IS NULL
+                                            AND fecha_cierre IS NULL)
+                                            OR
+                                        (estado = 'PAGADA'
+                                            AND fecha_pago IS NOT NULL
+                                            AND fecha_cierre IS NULL)
+                                            OR
+                                        (estado = 'CERRADA'
+                                            AND fecha_pago IS NOT NULL
+                                            AND fecha_cierre IS NOT NULL)
+                                        )
 );
 
--- 10. Tabla: Pedido
+-- 13. Tabla: Pedido
 CREATE TABLE pedido (
                         id_pedido INT NOT NULL AUTO_INCREMENT,
-                        precio_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-                        id_mesa INT NOT NULL,
+                        fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         id_cuenta_consumo INT NOT NULL,
-                        id_reserva INT NOT NULL,
                         PRIMARY KEY (id_pedido),
-                        CONSTRAINT FK_pedido_mesa
-                            FOREIGN KEY (id_mesa) REFERENCES mesa(id_mesa),
                         CONSTRAINT FK_pedido_cuentaconsumo
-                            FOREIGN KEY (id_cuenta_consumo) REFERENCES cuenta_consumo(id_cuenta),
-                        CONSTRAINT FK_pedido_reserva
-                            FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva),
-                        CONSTRAINT CK_pedido_preciototal CHECK (precio_total >= 0)
+                            FOREIGN KEY (id_cuenta_consumo) REFERENCES cuenta_consumo(id_cuenta)
 );
 
--- 11. Tabla: DetallePedido
+-- 14. Tabla: DetallePedido
 CREATE TABLE detalle_pedido (
                                 id_detalle INT NOT NULL AUTO_INCREMENT,
                                 cantidad_platos INT NOT NULL,
@@ -172,77 +248,100 @@ CREATE TABLE detalle_pedido (
                                 CONSTRAINT FK_detalle_pedido
                                     FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido),
                                 CONSTRAINT CK_detalle_cantidad CHECK (cantidad_platos > 0),
-                                CONSTRAINT CK_detalle_subtotal CHECK (subtotal >= 0)
+                                CONSTRAINT CK_detalle_preciounitario CHECK (precio_unitario >= 0),
+                                CONSTRAINT CK_detalle_subtotal CHECK (subtotal = cantidad_platos * precio_unitario)
 );
 
 -- ============================================
 -- 3. SENTENCIAS INSERT
 -- ============================================
 
--- 1. Empleados
-INSERT INTO empleado (nombre, email, telefono, contrasenia, estado, turno, fecha_contratacion, tipo_empleado)
-VALUES
-    ('Brandon Hidalgo', 'brandon.hidalgo@rinconsatipeno.pe', '987654321', 'hash_secure_pass_1', 'ACTIVO', 'MANANA', '2026-01-15', 'ADMINISTRADOR'),
-    ('Leonardo Torres', 'leonardo.torres@rinconsatipeno.pe', '912345678', 'hash_secure_pass_2', 'ACTIVO', 'TARDE', '2026-02-01', 'ADMINISTRADOR'),
-    ('Carlos Mendoza', 'carlos.mendoza@rinconsatipeno.pe', '955443322', 'hash_secure_pass_3', 'ACTIVO', 'MANANA', '2026-03-10', 'MOZO'),
-    ('Ana Ramos', 'ana.ramos@rinconsatipeno.pe', '966778899', 'hash_secure_pass_4', 'ACTIVO', 'NOCHE', '2026-03-12', 'MOZO'),
-    ('Jorge Flores', 'jorge.flores@rinconsatipeno.pe', '944332211', 'hash_secure_pass_5', 'INACTIVO', 'TARDE', '2026-04-01', 'MOZO');
+-- 1. Cuentas de acceso
+INSERT INTO cuenta_acceso (email, contrasenia, estado) VALUES
+                                                           ('brandon.hidalgo@rinconsatipeno.pe', 'hash_secure_pass_1', 'ACTIVO'),
+                                                           ('leonardo.torres@rinconsatipeno.pe', 'hash_secure_pass_2', 'ACTIVO'),
+                                                           ('carlos.mendoza@rinconsatipeno.pe', 'hash_secure_pass_3', 'ACTIVO'),
+                                                           ('ana.ramos@rinconsatipeno.pe', 'hash_secure_pass_4', 'ACTIVO'),
+                                                           ('jorge.flores@rinconsatipeno.pe', 'hash_secure_pass_5', 'INACTIVO');
 
--- 2. Mesas
-INSERT INTO mesa (numero, capacidad, estado) VALUES
-                                                 (1, 4, 'LIBRE'),
-                                                 (2, 2, 'OCUPADA'),
-                                                 (3, 6, 'RESERVADA'),
-                                                 (4, 4, 'OCUPADA');
+-- 2. Administradores
+INSERT INTO administrador (nombre, telefono, fecha_contratacion, id_cuenta_acceso) VALUES
+                                                                                       ('Brandon Hidalgo', '987654321', '2026-01-15', 1),
+                                                                                       ('Leonardo Torres', '912345678', '2026-02-01', 2);
 
--- 3. Insumos (Incluye Cecina para tus pruebas en Java)
+-- 3. Mozos
+INSERT INTO mozo (nombre, telefono, fecha_contratacion, turno, zona, id_cuenta_acceso) VALUES
+                                                                                           ('Carlos Mendoza', '955443322', '2026-03-10', 'MANANA', 'SALON_PRINCIPAL', 3),
+                                                                                           ('Ana Ramos', '966778899', '2026-03-12', 'NOCHE', 'TERRAZA', 4),
+                                                                                           ('Jorge Flores', '944332211', '2026-04-01', 'TARDE', 'SALON_PRINCIPAL', 5);
+
+-- 4. Mesas
+INSERT INTO mesa (numero, capacidad, zona, estado) VALUES
+                                                       (1, 4, 'SALON_PRINCIPAL', 'LIBRE'),
+                                                       (2, 2, 'SALON_PRINCIPAL', 'OCUPADA'),
+                                                       (3, 6, 'TERRAZA', 'LIBRE'),
+                                                       (4, 4, 'TERRAZA', 'OCUPADA');
+
+-- 5. Insumos
 INSERT INTO insumo (nombre, unidad_medida, stock_actual, stock_minimo) VALUES
-                                                                           ('Cecina', 'Kg', 15.00, 3.00),
+                                                                           ('Cecina', 'KG', 15.00, 3.00),
                                                                            ('Carne de Res', 'KG', 50.00, 10.00),
-                                                                           ('Papas', 'KG', 100.00, 20.00),
+                                                                           ('Papas', 'KG', 99.40, 20.00),
                                                                            ('Arroz', 'KG', 80.00, 15.00);
 
--- 4. Movimientos de Inventario
+-- 6. Movimientos de inventario
 INSERT INTO movimiento_inventario (id_insumo, tipo_movimiento, cantidad) VALUES
                                                                              (1, 'ENTRADA', 15.00),
                                                                              (2, 'ENTRADA', 50.00),
-                                                                             (3, 'ENTRADA', 100.00);
+                                                                             (3, 'ENTRADA', 100.00),
+                                                                             (4, 'ENTRADA', 80.00),
+                                                                             (3, 'SALIDA', 0.60);
 
--- 5. Recetas
+-- 7. Recetas
 INSERT INTO receta (descripcion) VALUES
                                      ('Receta para Tacacho con Cecina'),
                                      ('Receta para Lomo Saltado'),
                                      ('Receta para Papa a la Huancaína');
 
--- 6. RecetaInsumo
+-- 8. RecetaInsumo
 INSERT INTO receta_insumo (id_receta, id_insumo, cantidad_requerida) VALUES
                                                                          (1, 1, 0.25),
                                                                          (2, 2, 0.25),
                                                                          (2, 3, 0.30),
+                                                                         (2, 4, 0.15),
                                                                          (3, 3, 0.20);
 
--- 7. Platos
+-- 9. Platos
 INSERT INTO plato (nombre, precio, categoria, descripcion, id_receta) VALUES
-                                                                          ('Tacacho con Cecina', 32.00, 'PLATOS_FUERTES', 'Tacacho tradicional con cecina de la selva.', 1),
+                                                                          ('Tacacho con Cecina', 32.00, 'PLATO_FONDO', 'Tacacho tradicional con cecina de la selva.', 1),
                                                                           ('Lomo Saltado', 45.50, 'PLATO_FONDO', 'Exquisito lomo saltado al jugo con papas fritas y arroz', 2),
                                                                           ('Papa a la Huancaína', 18.00, 'ENTRADA', 'Papas servidas con crema huancaína tradicional', 3);
 
--- 8. Reservas
-INSERT INTO reserva (fecha_reserva, cantidad_personas, estado, id_mesa) VALUES
-                                                                            ('2026-09-16 13:00:00', 4, 'CONFIRMADA', 3),
-                                                                            ('2026-09-16 20:00:00', 2, 'CONFIRMADA', 2);
+-- 10. DatosContacto
+INSERT INTO datos_contacto (nombre, telefono, correo) VALUES
+                                                          ('Ana Torres', '987654321', 'ana.torres@example.com'),
+                                                          ('Luis Ramirez', '912345678', 'luis.ramirez@example.com'),
+                                                          ('Maria Gutierrez', '998877665', 'maria.gutierrez@example.com'),
+                                                          ('Jorge Salazar', '955443322', 'jorge.salazar@example.com');
 
--- 9. Cuentas de Consumo
-INSERT INTO cuenta_consumo (fecha_apertura, fecha_cierre, estado, monto_total_pagar, id_mesa, id_mozo) VALUES
-                                                                                                           ('2026-09-15 12:30:00', NULL, 'ABIERTA', 32.00, 1, 3),
-                                                                                                           ('2026-09-15 13:00:00', '2026-09-15 14:15:00', 'PAGADA', 120.00, 2, 4);
+-- 11. Reservas
+INSERT INTO reserva (fecha, hora_inicio, hora_fin, cantidad_personas, estado, codigo_acceso, id_mesa, id_contacto) VALUES
+                                                                                                                       ('2026-09-28', '13:00:00', '15:00:00', 4, 'CONFIRMADA', UUID(), 3, 1),
+                                                                                                                       ('2026-09-27', '13:00:00', '14:30:00', 2, 'COMPLETADA', UUID(), 4, 2),
+                                                                                                                       ('2026-09-29', '20:00:00', '21:30:00', 2, 'PENDIENTE', UUID(), 1, 3),
+                                                                                                                       ('2026-09-30', '19:00:00', '21:00:00', 5, 'CANCELADA', UUID(), 3, 4);
 
--- 10. Pedidos
-INSERT INTO pedido (precio_total, id_mesa, id_cuenta_consumo, id_reserva) VALUES
-                                                                              (32.00, 1, 1, 1),
-                                                                              (120.00, 2, 2, 2);
+-- 12. Cuentas de consumo
+INSERT INTO cuenta_consumo (fecha_apertura, fecha_cierre, fecha_pago, estado, monto_total_pagar, enlace_pago, id_mesa, id_mozo, id_reserva) VALUES
+                                                                                                                                                ('2026-09-27 12:30:00', NULL, NULL, 'ABIERTA', 32.00, NULL, 2, 1, NULL),
+                                                                                                                                                ('2026-09-27 13:00:00', NULL, '2026-09-27 14:10:00', 'PAGADA', 91.00, UUID(), 4, 2, 2);
 
--- 11. Detalles de Pedido
+-- 13. Pedidos
+INSERT INTO pedido (fecha_hora, id_cuenta_consumo) VALUES
+                                                       ('2026-09-27 12:35:00', 1),
+                                                       ('2026-09-27 13:05:00', 2);
+
+-- 14. Detalles de pedido
 INSERT INTO detalle_pedido (cantidad_platos, precio_unitario, subtotal, id_plato, id_pedido) VALUES
                                                                                                  (1, 32.00, 32.00, 1, 1),
                                                                                                  (2, 45.50, 91.00, 2, 2);

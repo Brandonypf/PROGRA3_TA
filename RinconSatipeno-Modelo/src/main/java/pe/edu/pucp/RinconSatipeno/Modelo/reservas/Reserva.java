@@ -1,5 +1,6 @@
 package pe.edu.pucp.RinconSatipeno.Modelo.reservas;
 
+import pe.edu.pucp.RinconSatipeno.Modelo.mesas.Mesa;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -8,11 +9,11 @@ public class Reserva {
     private LocalDate fecha;
     private LocalTime horaInicio;
     private LocalTime horaFin;
-    private int numPersonas;
+    private int cantidadPersonas;
     private EstadoReserva estado;
-    private String nombreContacto;
-    private String telefonoContacto;
-    private String correoContacto;
+    private String codigoAcceso;
+    private Mesa mesa;
+    private datosContacto datosContacto;
 
     public Reserva() {
     }
@@ -25,11 +26,11 @@ public class Reserva {
         setFecha(reserva.getFecha());
         setHoraInicio(reserva.getHoraInicio());
         setHoraFin(reserva.getHoraFin());
-        setNumPersonas(reserva.getNumPersonas());
+        setCantidadPersonas(reserva.getCantidadPersonas());
         setEstado(reserva.getEstado());
-        setNombreContacto(reserva.getNombreContacto());
-        setTelefonoContacto(reserva.getTelefonoContacto());
-        setCorreoContacto(reserva.getCorreoContacto());
+        setCodigoAcceso(reserva.getCodigoAcceso());
+        setMesa(reserva.getMesa());
+        setDatosContacto(reserva.getDatosContacto());
     }
 
     public int getIdReserva() {
@@ -79,15 +80,15 @@ public class Reserva {
         this.horaFin = horaFin;
     }
 
-    public int getNumPersonas() {
-        return numPersonas;
+    public int getCantidadPersonas() {
+        return cantidadPersonas;
     }
 
-    public void setNumPersonas(int numPersonas) {
-        if (numPersonas <= 0) {
-            throw new IllegalArgumentException("numPersonas debe ser mayor a cero");
+    public void setCantidadPersonas(int cantidadPersonas) {
+        if (cantidadPersonas <= 0) {
+            throw new IllegalArgumentException("cantidadPersonas debe ser mayor a cero");
         }
-        this.numPersonas = numPersonas;
+        this.cantidadPersonas = cantidadPersonas;
     }
 
     public EstadoReserva getEstado() {
@@ -101,36 +102,42 @@ public class Reserva {
         this.estado = estado;
     }
 
-    public String getNombreContacto() {
-        return nombreContacto;
+    public String getCodigoAcceso() {
+        return codigoAcceso;
     }
 
-    public void setNombreContacto(String nombreContacto) {
-        if (nombreContacto == null || nombreContacto.isEmpty()) {
-            throw new IllegalArgumentException("nombreContacto no puede ser nulo o vacío");
+    public void setCodigoAcceso(String codigoAcceso) {
+        if (codigoAcceso == null || codigoAcceso.trim().isEmpty()) {
+            throw new IllegalArgumentException("codigoAcceso no puede ser nulo o vacío");
         }
-        this.nombreContacto = nombreContacto;
+        this.codigoAcceso = codigoAcceso;
     }
 
-    public String getTelefonoContacto() {
-        return telefonoContacto;
-    }
-
-    public void setTelefonoContacto(String telefonoContacto) {
-        if (telefonoContacto == null || telefonoContacto.isEmpty()) {
-            throw new IllegalArgumentException("telefonoContacto no puede ser nulo o vacío");
+    public Mesa getMesa() {
+        if (mesa != null) {
+            return new Mesa(mesa);
         }
-        this.telefonoContacto = telefonoContacto;
+        return null;
     }
 
-    public String getCorreoContacto() {
-        return correoContacto;
-    }
-
-    public void setCorreoContacto(String correoContacto) {
-        if (correoContacto == null || correoContacto.isEmpty() || !correoContacto.contains("@")) {
-            throw new IllegalArgumentException("correoContacto no puede ser nulo, vacío o inválido");
+    public void setMesa(Mesa mesa) {
+        if (mesa == null) {
+            throw new IllegalArgumentException("mesa no puede ser nula");
         }
-        this.correoContacto = correoContacto;
+        this.mesa = new Mesa(mesa);
+    }
+
+    public datosContacto getDatosContacto() {
+        if (datosContacto != null) {
+            return new datosContacto(datosContacto);
+        }
+        return null;
+    }
+
+    public void setDatosContacto(datosContacto datosContacto) {
+        if (datosContacto == null) {
+            throw new IllegalArgumentException("datosContacto no puede ser nulo");
+        }
+        this.datosContacto = new datosContacto(datosContacto);
     }
 }

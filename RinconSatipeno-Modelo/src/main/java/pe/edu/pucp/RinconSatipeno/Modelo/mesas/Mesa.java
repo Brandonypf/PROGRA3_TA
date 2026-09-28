@@ -5,7 +5,7 @@ public class Mesa {
     private int idMesa;
     private int numero;
     private int capacidad;
-    private String zona;
+    private Zona zona;
     private EstadoMesa estado;
 
     public Mesa(){
@@ -56,10 +56,10 @@ public class Mesa {
         this.estado=estado;
     }
 
-    public String getZona(){
+    public Zona getZona(){
         return this.zona;
     }
-    public void setZona(String zonaAsignada){
+    public void setZona(Zona zonaAsignada){
         if(zonaAsignada==null){
             throw new IllegalArgumentException("La zona asignada debe ser válida");
         }

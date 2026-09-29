@@ -31,14 +31,14 @@ public class InsumoDaoImplement implements InsumoDao {
 
     @Override
     public Insumo findBy(Integer id) throws SQLException {
-        if(id==null){
+        if (id == null) {
             throw new IllegalArgumentException("El id no puede ser nulo");
         }
         String sql = "{call buscar_insumo_por_id(?)}";
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setInt("p_id_insumo", id);
+            cmd.setInt(1, id);
             try (ResultSet rs = cmd.executeQuery()) {
                 return rs.next() ? mapear(rs, new Insumo()) : null;
             }
@@ -47,62 +47,67 @@ public class InsumoDaoImplement implements InsumoDao {
 
     @Override
     public void insert(Insumo insumo) throws SQLException {
-        if(insumo==null){
+        if (insumo == null) {
             throw new IllegalArgumentException("El insumo no puede ser nulo");
         }
+        // procedimiento: (p_nombre, p_unidad_medida, p_stock_actual, p_stock_minimo, OUT p_id_insumo)
         String sql = "{call insertar_insumo(?, ?, ?, ?, ?)}";
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setString("p_nombre", insumo.getNombre());
-            cmd.setString("p_unidad_medida", insumo.getUnidadMedida());
-            cmd.setDouble("p_stock_actual", insumo.getStockActual());
-            cmd.setDouble("p_stock_minimo", insumo.getStockMinimo());
+            cmd.setString(1, insumo.getNombre());
+            cmd.setString(2, insumo.getUnidadMedida());
+            cmd.setDouble(3, insumo.getStockActual());
+            cmd.setDouble(4, insumo.getStockMinimo());
 
-            cmd.registerOutParameter("p_id_insumo", Types.INTEGER);
+            // Registro del parámetro OUT (es el quinto ?)
+            cmd.registerOutParameter(5, Types.INTEGER);
 
-            if(cmd.executeUpdate()==0){
-                throw new SQLException("No se pudo insertar el insumo");
+            cmd.execute();
+
+            int idGenerado = cmd.getInt(5);
+            if (idGenerado <= 0) {
+                throw new SQLException("No se pudo obtener un ID válido para el insumo insertado.");
             }
-            insumo.setId(cmd.getInt("p_id_insumo"));
+            insumo.setId(idGenerado);
         }
     }
 
     @Override
     public void update(Insumo insumo) throws SQLException {
-        if(insumo==null){
+        if (insumo == null) {
             throw new IllegalArgumentException("El insumo no puede ser nulo");
         }
+        // procedimiento: (p_id_insumo, p_nombre, p_unidad_medida, p_stock_actual, p_stock_minimo)
         String sql = "{call modificar_insumo(?, ?, ?, ?, ?)}";
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setString("p_nombre", insumo.getNombre());
-            cmd.setString("p_unidad_medida", insumo.getUnidadMedida());
-            cmd.setDouble("p_stock_actual", insumo.getStockActual());
-            cmd.setDouble("p_stock_minimo", insumo.getStockMinimo());
+            cmd.setInt(1, insumo.getId());
+            cmd.setString(2, insumo.getNombre());
+            cmd.setString(3, insumo.getUnidadMedida());
+            cmd.setDouble(4, insumo.getStockActual());
+            cmd.setDouble(5, insumo.getStockMinimo());
 
-            cmd.setInt("p_id_insumo", insumo.getId());
-
-            if(cmd.executeUpdate()==0){
-                throw new SQLException("No se pudo insertar el insumo");
+            if (cmd.executeUpdate() == 0) {
+                throw new SQLException("No se pudo modificar el insumo");
             }
         }
     }
 
     @Override
     public void delete(Integer id) throws SQLException {
-        if(id==null){
+        if (id == null) {
             throw new IllegalArgumentException("El id no puede ser nulo");
         }
         String sql = "{call eliminar_insumo(?)}";
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setInt("p_id_insumo", id);
+            cmd.setInt(1, id);
 
-            if(cmd.executeUpdate()==0){
-                throw new SQLException("No se pudo insertar el insumo");
+            if (cmd.executeUpdate() == 0) {
+                throw new SQLException("No se pudo eliminar el insumo");
             }
         }
     }

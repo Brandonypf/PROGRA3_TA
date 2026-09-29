@@ -5,8 +5,7 @@
 -- Motor: MySQL 8.0.16+
 -- ============================================
 
-CREATE DATABASE IF NOT EXISTS rincon_satipeno;
-USE rincon_satipeno;
+USE RinconcitoSatipenno;
 
 SET FOREIGN_KEY_CHECKS = 0;
 

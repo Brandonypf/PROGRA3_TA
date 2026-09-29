@@ -38,6 +38,9 @@ public class Insumoimpl implements InsumoLN {
         try {
             insumoDao.insert(insumo);
         } catch (SQLException variableException) {
+            // Imprime el error exacto que envía MySQL
+            System.err.println("ERROR SQL EXACTO: " + variableException.getMessage());
+            variableException.printStackTrace();
             throw new BLException("No se pudo registrar el insumo en el inventario", variableException);
         }
     }

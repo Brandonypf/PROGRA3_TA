@@ -1,4 +1,4 @@
-USE rincon_satipeno;
+USE RinconcitoSatipenno;
 
 -- ============================================
 -- ELIMINAR PROCEDIMIENTOS EXISTENTES

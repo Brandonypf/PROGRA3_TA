@@ -36,7 +36,7 @@ public class MovimientoInventarioDaoImplement implements MovimientoInventarioDao
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setInt("p_id_movimiento", id);
+            cmd.setInt(1, id);
             try (ResultSet rs = cmd.executeQuery()) {
                 return rs.next() ? mapear(rs, new MovimientoInventario()) : null;
             }
@@ -48,20 +48,25 @@ public class MovimientoInventarioDaoImplement implements MovimientoInventarioDao
         if (movimiento == null) {
             throw new IllegalArgumentException("El movimiento de inventario no puede ser nulo");
         }
+        // procedimiento: (p_id_insumo, p_tipo_movimiento, p_cantidad, OUT p_id_movimiento)
         String sql = "{call insertar_movimiento_inventario(?, ?, ?, ?)}";
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setInt("p_id_insumo", movimiento.getInsumo().getId());
-            cmd.setString("p_tipo_movimiento", movimiento.getTipo().name());
-            cmd.setDouble("p_cantidad", movimiento.getCantidad());
+            cmd.setInt(1, movimiento.getInsumo().getId());
+            cmd.setString(2, movimiento.getTipo().name());
+            cmd.setDouble(3, movimiento.getCantidad());
 
-            cmd.registerOutParameter("p_id_movimiento", Types.INTEGER);
+            // Parámetro de salida OUT es el 4°
+            cmd.registerOutParameter(4, Types.INTEGER);
 
-            if (cmd.executeUpdate() == 0) {
-                throw new SQLException("No se pudo insertar el movimiento de inventario");
+            cmd.execute();
+
+            int idGenerado = cmd.getInt(4);
+            if (idGenerado <= 0) {
+                throw new SQLException("No se pudo obtener un ID válido para el movimiento registrado.");
             }
-            movimiento.setId(cmd.getInt("p_id_movimiento"));
+            movimiento.setId(idGenerado);
         }
     }
 
@@ -70,14 +75,15 @@ public class MovimientoInventarioDaoImplement implements MovimientoInventarioDao
         if (movimiento == null) {
             throw new IllegalArgumentException("El movimiento de inventario no puede ser nulo");
         }
+        // procedimiento: (p_id_movimiento, p_id_insumo, p_tipo_movimiento, p_cantidad)
         String sql = "{call modificar_movimiento_inventario(?, ?, ?, ?)}";
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setInt("p_id_movimiento", movimiento.getId());
-            cmd.setInt("p_id_insumo", movimiento.getInsumo().getId());
-            cmd.setString("p_tipo_movimiento", movimiento.getTipo().name());
-            cmd.setDouble("p_cantidad", movimiento.getCantidad());
+            cmd.setInt(1, movimiento.getId());
+            cmd.setInt(2, movimiento.getInsumo().getId());
+            cmd.setString(3, movimiento.getTipo().name());
+            cmd.setDouble(4, movimiento.getCantidad());
 
             if (cmd.executeUpdate() == 0) {
                 throw new SQLException("No se pudo modificar el movimiento de inventario");
@@ -94,7 +100,7 @@ public class MovimientoInventarioDaoImplement implements MovimientoInventarioDao
         try (Connection con = DBManager.getInstance().getConnection();
              CallableStatement cmd = con.prepareCall(sql)) {
 
-            cmd.setInt("p_id_movimiento", id);
+            cmd.setInt(1, id);
 
             if (cmd.executeUpdate() == 0) {
                 throw new SQLException("No se pudo eliminar el movimiento de inventario");

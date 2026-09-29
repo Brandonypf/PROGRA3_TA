@@ -7,6 +7,6 @@ public interface lnGeneral <T, ID> {
     List<T> findAll() throws BLException;
     T findBy(ID id) throws BLException;
     void insert(T objetoAuxiliar) throws BLException;
-    void update(ID idAuxiliar) throws BLException;
+    void update(T aux) throws BLException;
     void delete(ID id) throws BLException;
 }

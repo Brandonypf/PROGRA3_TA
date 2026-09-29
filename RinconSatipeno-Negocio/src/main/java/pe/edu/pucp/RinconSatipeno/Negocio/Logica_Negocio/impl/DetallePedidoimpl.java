@@ -1,27 +1,23 @@
 package pe.edu.pucp.RinconSatipeno.Negocio.Logica_Negocio.impl;
 
+import pe.edu.pucp.RinconSatipeno.Modelo.pedidos.DetallePedido;
+import pe.edu.pucp.RinconSatipeno.Negocio.Logica_Negocio.BLException;
+import pe.edu.pucp.RinconSatipeno.Negocio.Logica_Negocio.DetallePedidoLN;
+import pe.edu.pucp.rinconSatipeno.dao.CuentaConsumoDao;
+import pe.edu.pucp.rinconSatipeno.dao.DetallePedidoDao;
+import pe.edu.pucp.rinconSatipeno.dao.impl.CuentaConsumoDaoImplement;
+import pe.edu.pucp.rinconSatipeno.dao.impl.DetallePedidoDaoImplement;
+
 import java.sql.SQLException;
 import java.util.List;
-import pe.edu.pucp.RinconSatipeno.Modelo.cuentas.CuentaConsumo;
-import pe.edu.pucp.RinconSatipeno.Negocio.Logica_Negocio.BLException;
-import pe.edu.pucp.RinconSatipeno.Negocio.Logica_Negocio.CuentaConsumoLN;
-import pe.edu.pucp.rinconSatipeno.dao.CuentaConsumoDao;
-import pe.edu.pucp.rinconSatipeno.dao.impl.CuentaConsumoDaoImplement;
 
-
-
-
-
-public class CuentaConsumoimpl implements CuentaConsumoLN{
-
-    //Nos aseguramos que la clase solo sea asignada una vez (durante su creación)
-    //Utilizamos DAO porque el modelo de negocio solo conoce los contratos, más no la lógica del negocio.
-    private final CuentaConsumoDao cuentaDAO = new CuentaConsumoDaoImplement();
+public class DetallePedidoimpl implements DetallePedidoLN {
+    private final DetallePedidoDao detallePedidoAux = new DetallePedidoDaoImplement();
 
     @Override
-    public List<CuentaConsumo> findAll() throws BLException{
+    public List<DetallePedido> findAll() throws BLException {
         try{
-            return cuentaDAO.findAll();
+            return detallePedidoAux.findAll();
         } catch (SQLException variableException){
             throw  new BLException("No se pudo listar todas las cuentas de consumo", variableException);
         }
@@ -29,28 +25,28 @@ public class CuentaConsumoimpl implements CuentaConsumoLN{
 
 
     @Override
-    public CuentaConsumo findBy(Integer id) throws BLException{
+    public DetallePedido findBy(Integer id) throws BLException{
         try{
-            return cuentaDAO.findBy(id);
+            return detallePedidoAux.findBy(id);
         } catch (SQLException variableException){
             throw new BLException("No se pudo encontrar la cuenta de consumo", variableException);
         }
     }
 
     @Override
-    public void insert(CuentaConsumo cuentaconsumo) throws BLException{
+    public void insert(DetallePedido cuentaconsumo) throws BLException{
         try{
-            cuentaDAO.insert(cuentaconsumo);
+            detallePedidoAux.insert(cuentaconsumo);
         } catch (SQLException variableException){
             throw new BLException("No se pudo insertar la cuenta de consumo", variableException);
         }
     }
 
     @Override
-    public void update(CuentaConsumo aux) throws BLException{
-        validarExiste(aux.getIdCuenta());
+    public void update(DetallePedido aux) throws BLException{
+        validarExiste(aux.getIdDetalle());
         try{
-            cuentaDAO.update(aux);
+            detallePedidoAux.update(aux);
         } catch (SQLException variableException){
             throw new BLException("No se pudo actualizar la cuenta de consumo", variableException);
         }
@@ -59,7 +55,7 @@ public class CuentaConsumoimpl implements CuentaConsumoLN{
     @Override
     public void delete(Integer id) throws BLException{
         try{
-            cuentaDAO.delete(id);
+            detallePedidoAux.delete(id);
         } catch (SQLException variableException){
             throw new BLException("No se pudo eliminar la cuenta de consumo");
         }
@@ -67,22 +63,9 @@ public class CuentaConsumoimpl implements CuentaConsumoLN{
 
     public void validarExiste(int id) throws BLException{
         try{
-            cuentaDAO.findBy(id);
+            detallePedidoAux.findBy(id);
         } catch (SQLException variableSQL){
             throw new BLException("No se encontró la existencia de la cuenta de consumo");
         }
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-

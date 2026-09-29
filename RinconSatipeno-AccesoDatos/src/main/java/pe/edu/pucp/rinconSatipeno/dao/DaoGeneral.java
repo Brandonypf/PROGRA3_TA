@@ -8,6 +8,6 @@ public interface DaoGeneral <T,ID> {
     List<T> findAll() throws SQLException;
     T findBy(ID id) throws SQLException;
     void insert(T modelo) throws SQLException;
-    void update(ID id) throws SQLException;
+    void update(T aux) throws SQLException;
     void delete(ID id) throws SQLException;
 }

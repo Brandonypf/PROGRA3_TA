@@ -1,0 +1,113 @@
+@page "/reservas/nueva"
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Nueva reserva | El Rincón Satipeño</PageTitle>
+
+<section class="rs-page-banner">
+    <div class="container text-center">
+        <span class="rs-eyebrow">TE ESTAMOS ESPERANDO</span>
+        <h1 class="rs-heading mt-2">Reserva tu mesa</h1>
+        <p class="rs-muted mb-0">Ingresa los datos para visualizar cómo sería una reserva.</p>
+    </div>
+</section>
+<div class="container rs-form-container pb-5">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="rs-panel p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <span class="rs-step-number">1</span>
+                    <div>
+                        <h2 class="h4 mb-1">Detalles de tu visita</h2>
+                        <p class="rs-muted mb-0 small">Selecciona cuándo quieres visitarnos.</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="fecha">Fecha de visita</label>
+                        <input id="fecha" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="hora">Hora</label>
+                        <select id="hora" class="form-select">
+                            <option value="">Seleccionar horario</option>
+                            <option>12:00</option>
+                            <option>13:00</option>
+                            <option>14:00</option>
+                            <option>18:00</option>
+                            <option>19:00</option>
+                            <option>20:00</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="personas">Número de personas</label>
+                        <select id="personas" class="form-select">
+                            <option>1 persona</option>
+                            <option selected>2 personas</option>
+                            <option>3 personas</option>
+                            <option>4 personas</option>
+                            <option>5 personas</option>
+                            <option>6 personas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="zona">Zona preferida</label>
+                        <select id="zona" class="form-select">
+                            <option>Sin preferencia</option>
+                            <option>Salón principal</option>
+                            <option>Terraza</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="rs-info mt-3">ℹ️ Las reservas tienen una duración máxima de 2 horas.</div>
+                <hr class="my-4" />
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <span class="rs-step-number">2</span>
+                    <div>
+                        <h2 class="h4 mb-1">Tus datos de contacto</h2>
+                        <p class="rs-muted mb-0 small">No es necesario crear una cuenta.</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="nombre">Nombre completo</label>
+                        <input id="nombre" class="form-control" placeholder="Ej. Brandon Hidalgo" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="telefono">Teléfono</label>
+                        <input id="telefono" class="form-control" type="tel" placeholder="Ej. 946152381" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="correo">Correo electrónico</label>
+                        <input id="correo" class="form-control" type="email" placeholder="Ej. brandon24@gmail.com" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="observacion">Observaciones (opcional)</label>
+                        <textarea id="observacion" class="form-control" rows="3" placeholder="Alguna indicación para tu visita..."></textarea>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap justify-content-between gap-3 mt-4">
+                    <a class="btn rs-btn-outline" href="/">← Volver al inicio</a>
+                    <a class="btn rs-btn-primary" href="/reservas/confirmacion">Ver confirmación →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="rs-panel p-4 rs-side-card">
+                <div class="rs-side-icon">📅</div>
+                <h3 class="h5 mt-3">Una visita especial</h3>
+                <p class="rs-muted">Queremos que disfrutes cada momento. Elige tu fecha y ven a compartir con nosotros.</p>
+                <hr />
+                <div class="d-flex justify-content-between small mb-2">
+                    <span>Duración máxima</span>
+                    <strong>2 horas</strong>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span>Tolerancia</span>
+                    <strong>15 minutos</strong>
+                </div>
+                <hr />
+                <a class="rs-text-link" href="/reservas/gestionar">¿Ya tienes una reserva? →</a>
+            </div>
+        </div>
+    </div>
+</div>

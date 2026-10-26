@@ -1,0 +1,152 @@
+@page "/carta"
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Nuestra carta | El Rincón Satipeño</PageTitle>
+
+<section class="rs-page-banner">
+    <div class="container text-center">
+        <span class="rs-eyebrow">SABORES PARA COMPARTIR</span>
+        <h1 class="rs-heading mt-2">Nuestra carta</h1>
+        <p class="rs-muted mb-0">Algunas opciones deliciosas para tu próxima visita.</p>
+    </div>
+</section>
+<div class="container pb-5">
+    <div class="rs-callout mb-4">
+        <span>ℹ️</span>
+        <span>Platos y precios.</span>
+        <a href="/reservas/nueva" class="ms-auto text-nowrap">Reservar mesa →</a>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-4" aria-label="Categorías de la carta">
+        <a class="btn rs-category-link" href="#entradas">Entradas</a>
+        <a class="btn rs-category-link" href="#fondos">Platos de fondo</a>
+        <a class="btn rs-category-link" href="#postres">Postres</a>
+        <a class="btn rs-category-link" href="#bebidas">Bebidas</a>
+    </div>
+    <section id="entradas" class="rs-menu-section">
+        <h2 class="rs-menu-title">🥗 Entradas</h2>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=900&q=80&auto=format&fit=crop" alt="Ensalada fresca" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Entrada</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Ensalada de la casa</h3>
+                            <strong>S/ 16.00</strong>
+                        </div>
+                        <p>Vegetales frescos y aliño especial de la casa.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1541014741259-de529411b96a?w=900&q=80&auto=format&fit=crop" alt="Entrada de restaurante" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Entrada</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Tequeños artesanales</h3>
+                            <strong>S/ 18.00</strong>
+                        </div>
+                        <p>Porción para compartir acompañada de salsa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="fondos" class="rs-menu-section">
+        <h2 class="rs-menu-title">🍛 Platos de fondo</h2>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=900&q=80&auto=format&fit=crop" alt="Plato principal servido" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Plato de fondo</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Arroz con pollo</h3>
+                            <strong>S/ 25.00</strong>
+                        </div>
+                        <p>Arroz sazonado con pollo y acompañamiento.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=900&q=80&auto=format&fit=crop" alt="Plato de comida caliente" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Plato de fondo</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Especial de la casa</h3>
+                            <strong>S/ 32.00</strong>
+                        </div>
+                        <p>Una preparación especial para disfrutar en familia.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=900&q=80&auto=format&fit=crop" alt="Comida fresca servida en plato" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Plato de fondo</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Opción vegetariana</h3>
+                            <strong>S/ 24.00</strong>
+                        </div>
+                        <p>Una combinación de vegetales y sabores frescos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="postres" class="rs-menu-section">
+        <h2 class="rs-menu-title">🍰 Postres</h2>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=900&q=80&auto=format&fit=crop" alt="Postre servido en copa" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Postre</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Postre de la casa</h3>
+                            <strong>S/ 14.00</strong>
+                        </div>
+                        <p>Dulce especial para terminar tu comida.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="bebidas" class="rs-menu-section">
+        <h2 class="rs-menu-title">🥤 Bebidas</h2>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=900&q=80&auto=format&fit=crop" alt="Bebida natural refrescante" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Bebida</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Jugo natural</h3>
+                            <strong>S/ 10.00</strong>
+                        </div>
+                        <p>Fruta de temporada, preparada al momento.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="rs-dish">
+                    <img src="https://images.unsplash.com/photo-1507281549113-040fcfef650e?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D" alt="Bebida refrescante en vaso" />
+                    <div class="p-3">
+                        <span class="rs-menu-label">Bebida</span>
+                        <div class="d-flex justify-content-between gap-2 mt-2">
+                            <h3>Limonada</h3>
+                            <strong>S/ 8.00</strong>
+                        </div>
+                        <p>Refrescante limonada de preparación casera.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="text-center py-4">
+        <a class="btn rs-btn-primary btn-lg" href="/reservas/nueva">Reservar una mesa →</a>
+    </div>
+</div>

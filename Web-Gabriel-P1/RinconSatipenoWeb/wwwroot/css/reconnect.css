@@ -1,0 +1,4 @@
+#components-reconnect-modal { display: none; }
+#components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-rejected {display:block;position:fixed;bottom:1rem;left:1rem;right:1rem;z-index:9999;background:#fff;padding:1rem;border:1px solid #ddd;box-shadow:0 3px 20px #0002;text-align:center;}

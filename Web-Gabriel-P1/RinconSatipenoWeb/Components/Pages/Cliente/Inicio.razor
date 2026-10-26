@@ -1,0 +1,75 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Inicio | El Rincón Satipeño</PageTitle>
+
+<section class="rs-hero">
+    <div class="container">
+        <div class="row align-items-center g-5 py-5">
+            <div class="col-lg-6 py-lg-4">
+                <span class="rs-eyebrow">✦ SABOR · TRADICIÓN · ENCUENTRO</span>
+                <h1 class="rs-display mt-3">Un rincón especial para <em>compartir.</em></h1>
+                <p class="rs-lead mt-3">Disfruta de platos preparados con cariño, un ambiente acogedor y buenos momentos en El Rincón Satipeño.</p>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a class="btn rs-btn-primary btn-lg" href="/reservas/nueva">Reservar una mesa <span aria-hidden="true">→</span></a>
+                    <a class="btn rs-btn-outline btn-lg" href="/carta">Explorar nuestra carta</a>
+                </div>
+                <div class="rs-hero-note mt-4">✓ Reserva sin crear una cuenta &nbsp; · &nbsp; ✓ Consulta tus reservas con tu código</div>
+            </div>
+            <div class="col-lg-6">
+                <div class="rs-hero-photo position-relative">
+                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=85&auto=format&fit=crop" alt="Interior acogedor de un restaurante" />
+                    <div class="rs-photo-tag">¡Te esperamos! <span>✦</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container rs-section">
+    <div class="text-center mb-4">
+        <span class="rs-eyebrow">DESCUBRE NUESTRO ESPACIO</span>
+        <h2 class="rs-heading mt-2">Todo listo para una gran visita</h2>
+        <p class="rs-muted">Elige tu comida favorita y reserva el momento perfecto.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="rs-feature h-100">
+                <div class="rs-feature-icon rs-green">🍽️</div>
+                <h3 class="h5">Platos para disfrutar</h3>
+                <p>Consulta nuestras entradas, platos de fondo, bebidas y postres.</p>
+                <a href="/carta">Ver carta →</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="rs-feature h-100">
+                <div class="rs-feature-icon rs-gold">📅</div>
+                <h3 class="h5">Reserva tu mesa</h3>
+                <p>Escoge el día, la hora y cuántas personas te acompañarán.</p>
+                <a href="/reservas/nueva">Hacer una reserva →</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="rs-feature h-100">
+                <div class="rs-feature-icon rs-coral">📩</div>
+                <h3 class="h5">Consulta fácilmente</h3>
+                <p>Visualiza, modifica o cancela tu reserva utilizando un código.</p>
+                <a href="/reservas/gestionar">Gestionar reserva →</a>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="rs-cta-section">
+    <div class="container">
+        <div class="rs-cta row g-3 align-items-center">
+            <div class="col-md-8">
+                <span class="rs-eyebrow text-white-50">NOS ENCANTARÍA RECIBIRTE</span>
+                <h2 class="mt-2 mb-1">¿Ya sabes cuándo nos visitas?</h2>
+                <p class="mb-0">Tu mesa está a unos cuantos pasos de distancia.</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a class="btn rs-btn-gold btn-lg" href="/reservas/nueva">Quiero reservar →</a>
+            </div>
+        </div>
+    </div>
+</section>

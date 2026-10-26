@@ -1,0 +1,107 @@
+@page "/reservas/gestionar"
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Gestionar reserva | El Rincón Satipeño</PageTitle>
+
+<section class="rs-page-banner">
+    <div class="container text-center">
+        <span class="rs-eyebrow">TU VISITA, A TU MANERA</span>
+        <h1 class="rs-heading mt-2">Gestiona tu reserva</h1>
+        <p class="rs-muted mb-0">Consulta, modifica o cancela tu reserva sin iniciar sesión.</p>
+    </div>
+</section>
+<div class="container rs-form-container pb-5">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="rs-panel p-4 h-100">
+                <h2 class="h4">Buscar una reserva</h2>
+                <label class="form-label mt-2" for="codigo">Código de reserva</label>
+                <input class="form-control" id="codigo" placeholder="Ej. SAT-2026-001" />
+                <label class="form-label mt-3" for="correo-consulta">Correo electrónico</label>
+                <input class="form-control" type="email" id="correo-consulta" placeholder="Ej. maria@correo.com" />
+                <button class="btn rs-btn-primary mt-4 w-100" type="button" disabled>Buscar </button>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="rs-panel p-4 h-100">
+                <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                    <div>
+                        <span class="rs-eyebrow">RESERVA</span>
+                        <h2 class="h4 mt-2 mb-0">SAT-2026-001</h2>
+                    </div>
+                    <span class="rs-status rs-status-green">Confirmada</span>
+                </div>
+                <hr />
+                <div class="row gy-3 mb-3">
+                    <div class="col-sm-6">
+                        <span class="rs-summary-label">Cliente</span>
+                        <strong>María López</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="rs-summary-label">Teléfono</span>
+                        <strong>987 654 321</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="rs-summary-label">Fecha</span>
+                        <strong>28/10/2026</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="rs-summary-label">Hora</span>
+                        <strong>19:00</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="rs-summary-label">Personas</span>
+                        <strong>2</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="rs-summary-label">Zona</span>
+                        <strong>Salón principal</strong>
+                    </div>
+                </div>
+                <details class="rs-details mt-4">
+                    <summary>✏️ Modificar reserva</summary>
+                    <div class="row g-3 mt-2">
+                        <div class="col-sm-6">
+                            <label class="form-label" for="nueva-fecha">Nueva fecha</label>
+                            <input id="nueva-fecha" type="date" class="form-control" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="nueva-hora">Nueva hora</label>
+                            <select id="nueva-hora" class="form-select">
+                                <option>18:00</option>
+                                <option selected>19:00</option>
+                                <option>20:00</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="nuevas-personas">Personas</label>
+                            <select id="nuevas-personas" class="form-select">
+                                <option>1</option>
+                                <option selected>2</option>
+                                <option>3</option>
+                                <option>4</option>
+                                <option>5</option>
+                                <option>6</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="button" class="btn rs-btn-primary" disabled>Guardar cambios (próxima entrega)</button>
+                        </div>
+                    </div>
+                </details>
+                <details class="rs-details rs-details-danger mt-3">
+                    <summary>🗑️ Cancelar reserva</summary>
+                    <div class="pt-3">
+                        <p class="rs-muted mb-3">Presione si desea cancelar la reserva</p>
+                        <button type="button" class="btn rs-btn-danger" disabled>Confirmar cancelación</button>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+        <a class="rs-text-link" href="/">← Volver a inicio</a>
+        <span class="mx-3 rs-muted">·</span>
+        <a class="rs-text-link" href="/reservas/nueva">Nueva reserva →</a>
+    </div>
+</div>

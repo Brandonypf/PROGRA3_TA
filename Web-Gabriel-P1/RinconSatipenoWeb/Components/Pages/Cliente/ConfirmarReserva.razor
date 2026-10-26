@@ -1,0 +1,53 @@
+@page "/reservas/confirmacion"
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Confirmación de ejemplo | El Rincón Satipeño</PageTitle>
+
+<div class="container rs-narrow py-5">
+    <div class="rs-panel text-center p-4 p-md-5">
+        <div class="rs-success-icon">✓</div>
+        <span class="rs-eyebrow mt-3 d-block">CONFIRMACIÓN</span>
+        <h1 class="rs-heading mt-2">¡Tu mesa te espera!</h1>
+        <p class="rs-muted">Así se visualizaría una reserva confirmada en la aplicación.</p>
+        <div class="rs-demo-alert text-start mt-4">
+            <strong>Modo demostración:</strong> no se creó ninguna reserva ni se envió un correo. Los siguientes datos son ficticios.
+        </div>
+        <div class="rs-booking-summary text-start mt-4">
+            <div class="text-center pb-3 mb-3 rs-summary-header">
+                <span class="rs-muted small">Código</span>
+                <div class="rs-booking-code">SAT-2026-001</div>
+            </div>
+            <div class="row gy-3">
+                <div class="col-sm-6">
+                    <span class="rs-summary-label">Cliente</span>
+                    <strong>María López</strong>
+                </div>
+                <div class="col-sm-6">
+                    <span class="rs-summary-label">Estado</span>
+                    <span class="rs-status rs-status-green">Confirmada</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="rs-summary-label">Fecha</span>
+                    <strong>28/10/2026</strong>
+                </div>
+                <div class="col-sm-6">
+                    <span class="rs-summary-label">Hora</span>
+                    <strong>19:00</strong>
+                </div>
+                <div class="col-sm-6">
+                    <span class="rs-summary-label">Personas</span>
+                    <strong>2 personas</strong>
+                </div>
+                <div class="col-sm-6">
+                    <span class="rs-summary-label">Zona</span>
+                    <strong>Salón principal</strong>
+                </div>
+            </div>
+        </div>
+        <p class="rs-muted small mt-4 mb-3">Cuando se implemente la integración, la confirmación y el código procederán del backend Java.</p>
+        <div class="d-flex justify-content-center flex-wrap gap-2">
+            <a class="btn rs-btn-primary" href="/reservas/gestionar">Ver gestión de reserva →</a>
+            <a class="btn rs-btn-outline" href="/">Volver al inicio</a>
+        </div>
+    </div>
+</div>

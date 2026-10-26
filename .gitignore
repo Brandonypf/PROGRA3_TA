@@ -37,3 +37,19 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Visual Studio / C# / Blazor ###
+
+# Archivos temporales de Visual Studio
+**/.vs/
+*.suo
+*.user
+*.rsuser
+
+# Carpetas generadas al compilar
+**/bin/
+**/obj/
+
+# Archivos temporales
+*.tmp
+*.log

@@ -1,0 +1,46 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Web
+
+
+<div class="rs-site">
+    <header class="rs-header">
+        <nav class="navbar navbar-expand-lg navbar-light rs-nav">
+            <div class="container">
+                <a class="navbar-brand rs-brand" href="/">
+                    <span class="rs-brand-icon">✦</span>
+                    <span>El Rincón <strong>Satipeño</strong><small>Restaurante &amp; tradición</small></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#rsNav"
+                        aria-controls="rsNav" aria-expanded="false" aria-label="Abrir menú">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="rsNav">
+                    <div class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                        <a class="nav-link" href="/">Inicio</a>
+                        <a class="nav-link" href="/admin">Administración</a>
+                        <a class="nav-link" href="/carta">Nuestra carta</a>
+                        <a class="nav-link" href="/reservas/gestionar">Mi reserva</a>
+                        <a class="btn rs-btn-primary ms-lg-2" href="/reservas/nueva">Reservar mesa</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="rs-main">@Body</main>
+
+    <footer class="rs-footer">
+        <div class="container py-4">
+            <div class="row align-items-center gy-3">
+                <div class="col-md-7">
+                    <div class="fw-semibold">✦ El Rincón Satipeño</div>
+                    <div class="small rs-footer-muted">Sabores que nos reúnen</div>
+                </div>
+                <div class="col-md-5 text-md-end">
+                    <a href="/carta">Carta</a><span class="mx-3">·</span><a href="/reservas/nueva">Reservar</a>
+                    <span class="mx-3">·</span><a href="/reservas/gestionar">Mi reserva</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>

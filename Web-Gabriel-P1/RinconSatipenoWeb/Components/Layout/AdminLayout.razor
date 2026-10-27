@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <a class="admin-brand" href="/admin"><i class="bi bi-tree-fill" aria-hidden="true"></i><span>El Rincón Satipeño<small>Administración</small></span></a>
+        <details class="admin-navigation" open>
+            <summary>Menú de administración</summary>
+            <AdminNavMenu />
+        </details>
+         <div class="admin-sidebar-note">
+            Sabores que nos reúnen
+        </div>
+    </aside>
+    <div class="admin-workspace">
+        <header class="admin-topbar">
+            <span class="fw-semibold">El Rincón Satipeño</span>
+            <div class="d-flex align-items-center gap-2"><span class="admin-avatar" aria-hidden="true">AD</span><span>Administrador<small class="d-block text-secondary">Usuario</small></span></div>
+        </header>
+        <main id="contenido-admin" class="admin-content">
+            <div class="alert alert-light border small mb-4"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Vista. Los datos y cambios no se guardan.</div>
+            @Body
+        </main>
+        <footer class="admin-footer">El Rincón Satipeño · Capa de presentación</footer>
+    </div>
+</div>

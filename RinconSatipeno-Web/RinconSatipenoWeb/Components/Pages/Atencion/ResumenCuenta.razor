@@ -1,0 +1,140 @@
+@page "/atencion/cuenta/{Id:int}"
+@layout MozoLayout
+@using System.Linq
+@inject EstadoAtencion Estado
+@inject NavigationManager Navegacion
+
+<PageTitle>Resumen de cuenta | El Rincón Satipeño</PageTitle>
+
+@if (mesa is null || !Estado.PuedeAtender(Id))
+{
+    <div class="rs-atn-card p-4"><h1>Mesa no encontrada</h1><a class="btn rs-btn-primary" href="/atencion/mozo">Volver al panel</a></div>
+}
+else
+{
+    <div class="rs-atn-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="rs-atn-overline">ATENCIÓN · CAJA</div>
+            <h1>Resumen de cuenta</h1>
+            <p class="text-secondary mb-0">Mesa @Id.ToString("00") · @mesa.Zona · @mesa.Personas comensales</p>
+        </div>
+        <a class="btn rs-btn-outline" href="@($"/atencion/mesa/{Id}")">← Volver a la atención</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(aviso))
+    {
+        <div class="alert alert-danger" role="alert">@aviso</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <section class="rs-atn-card p-3 p-md-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h5 mb-0">Detalle del consumo</h2>
+                    <span class="rs-atn-pill rs-atn-neutral">Mesa @Id.ToString("00")</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table rs-atn-table align-middle mb-0">
+                        <thead><tr><th>Descripción</th><th class="text-center">Cantidad</th><th class="text-end">Precio</th><th class="text-end">Importe</th></tr></thead>
+                        <tbody>
+                            @foreach (var detalle in detalles)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@detalle.Nombre</td>
+                                    <td class="text-center">@detalle.Cantidad</td>
+                                    <td class="text-end">S/ @detalle.PrecioUnitario.ToString("0.00")</td>
+                                    <td class="text-end">S/ @detalle.Importe.ToString("0.00")</td>
+                                </tr>
+                            }
+                            @if (detalles.Count == 0)
+                            {
+                                <tr><td colspan="4" class="text-center py-4 text-secondary">La mesa no tiene consumos registrados.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <p class="text-secondary small mt-3">Los importes de la carta incluyen IGV.</p>
+        </div>
+
+        <div class="col-lg-5">
+            <section class="rs-atn-card p-4">
+                <h2 class="h5 mb-3">Total a pagar</h2>
+                <div class="rs-atn-price-line"><span>Valor de venta</span><strong>S/ @Subtotal.ToString("0.00")</strong></div>
+                <div class="rs-atn-price-line"><span>IGV (18 %)</span><strong>S/ @Igv.ToString("0.00")</strong></div>
+                <hr />
+                <div class="rs-atn-price-line rs-atn-grand-total"><span>Total</span><strong>S/ @Total.ToString("0.00")</strong></div>
+
+                @if (Estado.ObtenerPago(Id) is not null)
+                {
+                    <div class="alert alert-success mt-4">Esta cuenta ya se encuentra cerrada.</div>
+                    <a class="btn rs-btn-primary w-100 mt-2" href="@($"/atencion/pago/{Id}")">Ver comprobante →</a>
+                }
+                else
+                {
+                    <div class="mt-4">
+                        <label class="form-label" for="comprobante">Tipo de comprobante</label>
+                        <select id="comprobante" class="form-select" @bind="comprobante">
+                            <option value="Boleta">Boleta de venta</option>
+                            <option value="Factura">Factura</option>
+                        </select>
+                    </div>
+                    @if (comprobante == "Factura")
+                    {
+                        <div class="mt-3">
+                            <label class="form-label" for="ruc">RUC</label>
+                            <input id="ruc" class="form-control" maxlength="11" inputmode="numeric" placeholder="11 dígitos" @bind="ruc" />
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label" for="razonSocial">Razón social</label>
+                            <input id="razonSocial" class="form-control" placeholder="Razón social del cliente" @bind="razonSocial" />
+                        </div>
+                    }
+                    <div class="mt-3">
+                        <label class="form-label" for="medio">Medio de pago</label>
+                        <select id="medio" class="form-select" @bind="medioPago">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Yape">Yape</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn rs-btn-primary w-100 mt-4 py-3"
+                            disabled="@(mesa.Estado != "Ocupada" || detalles.Count == 0)" @onclick="ConfirmarPago">Registrar pago →</button>
+                }
+                <a class="btn rs-btn-outline w-100 mt-2" href="@($"/atencion/mesa/{Id}")">Volver al consumo</a>
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private MesaAtencion? mesa;
+    private IReadOnlyList<DetalleAtencion> detalles = Array.Empty<DetalleAtencion>();
+    private string comprobante = "Boleta";
+    private string medioPago = "Efectivo";
+    private string ruc = "";
+    private string razonSocial = "";
+    private string aviso = "";
+
+    private decimal Total => Estado.Total(Id);
+    private decimal Subtotal => decimal.Round(Total / 1.18m, 2, MidpointRounding.AwayFromZero);
+    private decimal Igv => Total - Subtotal;
+
+    protected override void OnParametersSet()
+    {
+        mesa = Estado.BuscarMesa(Id);
+        detalles = Estado.ObtenerConsumo(Id);
+        aviso = "";
+    }
+
+    private void ConfirmarPago()
+    {
+        var url = $"/atencion/pago/{Id}?metodo={Uri.EscapeDataString(medioPago)}" +
+                  $"&comprobante={Uri.EscapeDataString(comprobante)}" +
+                  $"&ruc={Uri.EscapeDataString(ruc)}" +
+                  $"&razonSocial={Uri.EscapeDataString(razonSocial)}";
+        Navegacion.NavigateTo(url);
+    }
+}

@@ -1,0 +1,78 @@
+@page "/atencion/pago/{Id:int}"
+@layout MozoLayout
+@inject EstadoAtencion Estado
+
+<PageTitle>Pago registrado | El Rincón Satipeño</PageTitle>
+
+@if (!Estado.PuedeAtender(Id) || pago is null)
+{
+    <div class="rs-atn-card p-4">
+        <h1>Comprobante no disponible</h1>
+        <p class="text-secondary">Todavía no hay un pago registrado para la mesa @Id.ToString("00").</p>
+        <a class="btn rs-btn-primary" href="@($"/atencion/cuenta/{Id}")">Ir a la cuenta</a>
+        <a class="btn rs-btn-outline ms-2" href="/atencion/mozo">Volver al panel</a>
+    </div>
+}
+else
+{
+    <div class="rs-atn-confirm-wrap">
+        <section class="rs-atn-card p-4 p-md-5 text-center">
+            <div class="rs-atn-check" aria-hidden="true">✓</div>
+            <div class="rs-atn-overline mt-3">CUENTA CERRADA</div>
+            <h1 class="mt-2 mb-2">Pago registrado correctamente</h1>
+            <p class="text-secondary mb-4">La cuenta de la mesa @Id.ToString("00") se ha cerrado.</p>
+
+            <div class="rs-atn-receipt text-start mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <strong>Detalle del pago</strong>
+                    <span class="rs-atn-pill rs-atn-free">Pagado</span>
+                </div>
+                <div class="rs-atn-price-line"><span>N.º de operación</span><strong>@pago.Referencia</strong></div>
+                <div class="rs-atn-price-line"><span>Fecha y hora</span><strong>@pago.Fecha.ToString("dd/MM/yyyy HH:mm")</strong></div>
+                <div class="rs-atn-price-line"><span>Mesa</span><strong>@Id.ToString("00")</strong></div>
+                <div class="rs-atn-price-line"><span>Mozo</span><strong>@pago.Mozo</strong></div>
+                <div class="rs-atn-price-line"><span>Comprobante</span><strong>@pago.Comprobante</strong></div>
+                <div class="rs-atn-price-line"><span>Medio de pago</span><strong>@pago.Metodo</strong></div>
+                @if (pago.Comprobante == "Factura")
+                {
+                    <div class="rs-atn-price-line"><span>RUC</span><strong>@pago.Ruc</strong></div>
+                    <div class="rs-atn-price-line"><span>Razón social</span><strong>@pago.RazonSocial</strong></div>
+                }
+                <hr />
+                <div class="rs-atn-price-line rs-atn-grand-total"><span>Total pagado</span><strong>S/ @pago.Total.ToString("0.00")</strong></div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <a class="btn rs-btn-primary" href="/atencion/mozo">Volver al panel del mozo</a>
+                <a class="btn rs-btn-outline" href="@($"/atencion/cuenta/{Id}")">Revisar cuenta</a>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [SupplyParameterFromQuery(Name = "metodo")] public string? Metodo { get; set; }
+    [SupplyParameterFromQuery(Name = "comprobante")] public string? Comprobante { get; set; }
+    [SupplyParameterFromQuery(Name = "ruc")] public string? Ruc { get; set; }
+    [SupplyParameterFromQuery(Name = "razonSocial")] public string? RazonSocial { get; set; }
+    private PagoAtencion? pago;
+
+    protected override void OnParametersSet()
+    {
+        var mesa = Estado.BuscarMesa(Id);
+        if (mesa is null) return;
+        pago = new PagoAtencion
+        {
+            Mesa = Id,
+            Referencia = $"RS-{Id:000}",
+            Mozo = mesa.Mozo,
+            Metodo = Metodo ?? "Efectivo",
+            Comprobante = Comprobante ?? "Boleta",
+            Ruc = Ruc,
+            RazonSocial = RazonSocial,
+            Fecha = DateTime.Today,
+            Total = Estado.Total(Id)
+        };
+    }
+}

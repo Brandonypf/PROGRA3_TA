@@ -1,0 +1,151 @@
+@page "/atencion/mesa/{Id:int}"
+@layout MozoLayout
+@using System.Linq
+@inject EstadoAtencion Estado
+
+<PageTitle>Atención de mesa | El Rincón Satipeño</PageTitle>
+
+@if (mesa is null || !Estado.PuedeAtender(Id))
+{
+    <div class="rs-atn-card p-4"><h1>Mesa no encontrada</h1><p>Verifica el número de mesa seleccionado.</p><a href="/atencion/mozo" class="btn rs-btn-primary">Volver al panel</a></div>
+}
+else
+{
+    <div class="rs-atn-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="rs-atn-overline">SALÓN · PEDIDOS</div>
+            <h1>Atención de mesa @Id.ToString("00")</h1>
+            <p class="text-secondary mb-0">@mesa.Zona · @mesa.Personas comensales · Mozo: @mesa.Mozo</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="rs-atn-pill @EstadoAtencion.ClaseEstado(mesa.Estado)">@mesa.Estado</span>
+            <a class="btn rs-btn-outline" href="/atencion/mozo">← Volver</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(aviso))
+    {
+        <div class="alert @(error ? "alert-danger" : "alert-success")" role="status">@aviso</div>
+    }
+
+    @if (Estado.ObtenerPago(Id) is not null)
+    {
+        <div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>La cuenta de esta mesa se encuentra cerrada.</span>
+            <a class="btn btn-sm rs-btn-outline" href="@($"/atencion/pago/{Id}")">Ver comprobante</a>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            @if (mesa.Estado == "Ocupada" && Estado.ObtenerPago(Id) is null)
+            {
+                <section class="rs-atn-card p-3 p-md-4 mb-4">
+                    <h2 class="h5 mb-1">Agregar al pedido</h2>
+                    <p class="text-secondary small mb-3">Selecciona el plato o bebida y registra la cantidad solicitada.</p>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label" for="plato">Plato o bebida</label>
+                            <select id="plato" class="form-select" @bind="idPlato">
+                                @foreach (var plato in Estado.Platos)
+                                {
+                                    <option value="@plato.Id">@plato.Nombre — S/ @plato.Precio.ToString("0.00")</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="cantidad">Cantidad</label>
+                            <input id="cantidad" type="number" min="1" max="20" class="form-control" @bind="cantidad" />
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn rs-btn-primary w-100" @onclick="AgregarPedido">+ Agregar pedido</button>
+                        </div>
+                    </div>
+                </section>
+            }
+            else if (mesa.Estado != "Ocupada")
+            {
+                <div class="alert alert-secondary">La mesa no tiene una atención activa en este momento.</div>
+            }
+
+            <section class="rs-atn-card p-3 p-md-4">
+                <div class="d-flex justify-content-between gap-2 align-items-center mb-3">
+                    <div><h2 class="h5 mb-1">Consumo de la mesa</h2><p class="text-secondary small mb-0">Detalle de productos solicitados</p></div>
+                    <span class="rs-atn-pill rs-atn-neutral">@detalles.Sum(d => d.Cantidad) unidades</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table rs-atn-table align-middle mb-0">
+                        <thead><tr><th>Producto</th><th class="text-center">Cantidad</th><th class="text-end">P. unitario</th><th class="text-end">Importe</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            @foreach (var d in detalles)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@d.Nombre</td>
+                                    <td class="text-center">@d.Cantidad</td>
+                                    <td class="text-end">S/ @d.PrecioUnitario.ToString("0.00")</td>
+                                    <td class="text-end fw-semibold">S/ @d.Importe.ToString("0.00")</td>
+                                    <td><span class="rs-atn-pill @(d.Estado == "Servido" ? "rs-atn-free" : "rs-atn-reserved")">@d.Estado</span></td>
+                                </tr>
+                            }
+                            @if (detalles.Count == 0)
+                            {
+                                <tr><td colspan="5" class="text-center text-secondary py-4">Aún no se han agregado productos a esta mesa.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-xl-4">
+            <aside class="rs-atn-card p-4 rs-atn-sticky">
+                <h2 class="h5 mb-3">Resumen de atención</h2>
+                <div class="rs-atn-mesa-detail"><span>Mesa</span><strong>@Id.ToString("00")</strong></div>
+                <div class="rs-atn-mesa-detail"><span>Comensales</span><strong>@mesa.Personas</strong></div>
+                <div class="rs-atn-mesa-detail"><span>Unidades solicitadas</span><strong>@detalles.Sum(d => d.Cantidad)</strong></div>
+                <hr />
+                <div class="d-flex align-items-center justify-content-between mb-4"><span>Total de consumo</span><strong class="rs-atn-total">S/ @Total.ToString("0.00")</strong></div>
+                @if (Estado.ObtenerPago(Id) is not null)
+                {
+                    <a class="btn rs-btn-gold w-100 mb-2" href="@($"/atencion/pago/{Id}")">Consultar comprobante →</a>
+                }
+                else if (mesa.Estado == "Ocupada" && detalles.Count > 0)
+                {
+                    <a class="btn rs-btn-gold w-100 mb-2" href="@($"/atencion/cuenta/{Id}")">Preparar cuenta →</a>
+                }
+                else
+                {
+                    <button class="btn btn-secondary w-100 mb-2" disabled>Cuenta no disponible</button>
+                }
+                <a class="btn rs-btn-outline w-100" href="/atencion/mozo">Volver a mis mesas</a>
+            </aside>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private MesaAtencion? mesa;
+    private IReadOnlyList<DetalleAtencion> detalles = Array.Empty<DetalleAtencion>();
+    private int idPlato = 1;
+    private int cantidad = 1;
+    private string aviso = "";
+    private bool error;
+    private decimal Total => Estado.Total(Id);
+
+    protected override void OnParametersSet()
+    {
+        mesa = Estado.BuscarMesa(Id);
+        detalles = Estado.ObtenerConsumo(Id);
+        aviso = "";
+        error = false;
+    }
+
+    private void AgregarPedido()
+    {
+        var plato = Estado.Platos.FirstOrDefault(p => p.Id == idPlato);
+        if (plato is not null)
+            aviso = $"Producto seleccionado: {plato.Nombre} ({cantidad}).";
+    }
+}

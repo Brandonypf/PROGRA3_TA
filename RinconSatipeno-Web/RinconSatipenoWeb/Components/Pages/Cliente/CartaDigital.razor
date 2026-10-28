@@ -1,0 +1,67 @@
+@page "/carta"
+@using RinconSatipenoWeb.Components.Data
+@inject IJSRuntime JS
+
+<PageTitle>Nuestra carta | El Rincón Satipeño</PageTitle>
+<section class="rs-page-banner">
+    <div class="container text-center">
+        <span class="rs-eyebrow">SABORES PARA COMPARTIR</span>
+        <h1 class="rs-heading mt-2">Nuestra carta</h1>
+        <p class="rs-muted mb-0">Sabores peruanos para cada ocasión.</p>
+    </div>
+</section>
+<div class="container pb-5">
+    <div class="rs-callout mb-4">
+        <span>✦</span><span>Ingredientes frescos y platos preparados con dedicación.</span>
+        <a href="/reservas/nueva" class="ms-auto text-nowrap">Reservar mesa →</a>
+    </div>
+    <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Categorías de la carta">
+        <button type="button" class="btn rs-category-link" @onclick='() => IrA("entradas")'>Entradas</button>
+        <button type="button" class="btn rs-category-link" @onclick='() => IrA("fondos")'>Platos de fondo</button>
+        <button type="button" class="btn rs-category-link" @onclick='() => IrA("postres")'>Postres</button>
+        <button type="button" class="btn rs-category-link" @onclick='() => IrA("bebidas")'>Bebidas</button>
+    </nav>
+    @foreach (var seccion in secciones)
+    {
+        <section id="@seccion.Id" class="rs-menu-section rs-scroll-section">
+            <h2 class="rs-menu-title">@seccion.Titulo</h2>
+            <div class="row g-4">
+                @foreach (var plato in CartaRestaurante.Platos.Where(p => p.Categoria == seccion.Categoria))
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <article class="rs-dish h-100">
+                            <img src="@plato.Imagen" alt="@plato.Nombre" loading="lazy" />
+                            <div class="p-3">
+                                <span class="rs-menu-label">@seccion.CategoriaSingular</span>
+                                @if (!string.IsNullOrWhiteSpace(plato.Etiqueta))
+                                {
+                                    <span class="badge ms-2 rs-food-badge">@plato.Etiqueta</span>
+                                }
+                                <div class="d-flex justify-content-between gap-2 mt-2">
+                                    <h3>@plato.Nombre</h3>
+                                    <strong class="text-nowrap">S/ @plato.Precio.ToString("0.00")</strong>
+                                </div>
+                                <p>@plato.Descripcion</p>
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+    <div class="text-center py-4">
+        <a class="btn rs-btn-primary btn-lg" href="/reservas/nueva">Reservar una mesa →</a>
+    </div>
+</div>
+
+@code {
+    private readonly (string Id, string Titulo, string Categoria, string CategoriaSingular)[] secciones =
+    {
+        ("entradas", "🥗 Entradas", "Entradas", "Entrada"),
+        ("fondos", "🍛 Platos de fondo", "Platos de fondo", "Plato de fondo"),
+        ("postres", "🍰 Postres", "Postres", "Postre"),
+        ("bebidas", "🥤 Bebidas", "Bebidas", "Bebida")
+    };
+
+    private async Task IrA(string id) => await JS.InvokeVoidAsync("rinconIrASeccion", id);
+}

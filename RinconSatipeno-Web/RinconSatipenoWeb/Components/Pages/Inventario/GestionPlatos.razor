@@ -1,0 +1,156 @@
+@using RinconSatipenoWeb.Components.Data
+@page "/admin/platos"
+
+<PageTitle>Gestión de platos | El Rincón Satipeño</PageTitle>
+<HeadContent><link rel="stylesheet" href="/css/p3.css" /></HeadContent>
+
+<div class="p3-page container-fluid py-4 px-3 px-lg-4">
+    <nav aria-label="Ubicación" class="small mb-2"><a href="/">Inicio</a> / Administración / Platos</nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="p3-title mb-1">Gestión de platos</h1>
+            <p class="p3-subtitle mb-0">Administra los platos y precios de la carta del restaurante.</p>
+        </div>
+        <button type="button" class="btn p3-btn-primary" data-bs-toggle="modal" data-bs-target="#p3NuevoPlato">+ Registrar plato</button>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="p3-stat"><span>Total de platos</span><strong>@platos.Count</strong><small>En la carta</small></div></div>
+        <div class="col-6 col-lg-3"><div class="p3-stat"><span>Entradas</span><strong>@(platos.Count(p => p.Categoria == "Entradas"))</strong><small>Categoría</small></div></div>
+        <div class="col-6 col-lg-3"><div class="p3-stat"><span>Platos de fondo</span><strong>@(platos.Count(p => p.Categoria == "Platos de fondo"))</strong><small>Categoría</small></div></div>
+        <div class="col-6 col-lg-3"><div class="p3-stat"><span>Postres y bebidas</span><strong>@(platos.Count(p => p.Categoria == "Postres" || p.Categoria == "Bebidas"))</strong><small>En conjunto</small></div></div>
+    </div>
+
+    <section class="p3-card mb-4" aria-label="Filtros de platos">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label" for="p3BuscarPlato">Buscar plato</label>
+                <input id="p3BuscarPlato" class="form-control" placeholder="Nombre del plato..." @bind="busqueda" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="p3FiltrarCategoria">Categoría</label>
+                <select id="p3FiltrarCategoria" class="form-select" @bind="categoria">
+                    <option value="">Todas las categorías</option>
+                    <option value="Entradas">Entradas</option>
+                    <option value="Platos de fondo">Platos de fondo</option>
+                    <option value="Postres">Postres</option>
+                    <option value="Bebidas">Bebidas</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="button" class="btn p3-btn-outline flex-fill" @onclick="AplicarFiltros">Buscar</button>
+                <button type="button" class="btn btn-light border flex-fill" @onclick="LimpiarFiltros">Limpiar</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="p3-card p-0 overflow-hidden">
+        <div class="p3-table-title d-flex justify-content-between align-items-center gap-2">
+            <h2 class="h6 m-0">Listado de platos</h2>
+            <span class="text-secondary small">@PlatosFiltrados.Count de @platos.Count platos</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 p3-table">
+                <thead><tr><th>Código</th><th>Plato</th><th>Categoría</th><th>Precio</th><th>Descripción</th><th class="text-end">Acciones</th></tr></thead>
+                <tbody>
+                    @foreach (var plato in PlatosFiltrados)
+                    {
+                        <tr>
+                            <td>@plato.Codigo</td>
+                            <td class="fw-semibold">@plato.Nombre</td>
+                            <td><span class="p3-tag @EtiquetaCategoria(plato.Categoria)">@plato.Categoria</span></td>
+                            <td>@($"S/ {plato.Precio:0.00}")</td>
+                            <td>@plato.Descripcion</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm p3-btn-edit me-1" @onclick="() => SeleccionarPlato(plato)" data-bs-toggle="modal" data-bs-target="#p3EditarPlato">Editar</button>
+                                <button type="button" class="btn btn-sm p3-btn-danger" @onclick="() => SeleccionarPlato(plato)" data-bs-toggle="modal" data-bs-target="#p3EliminarPlato">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                    @if (PlatosFiltrados.Count == 0)
+                    {
+                        <tr><td colspan="6" class="text-center text-secondary py-4">No se encontraron platos con los filtros seleccionados.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <a class="btn p3-btn-outline" href="/admin/recetas">Ver recetas →</a>
+        <a class="btn p3-btn-outline" href="/admin/insumos">Ir a insumos →</a>
+        <a class="btn btn-link p3-link" href="/">Volver al inicio</a>
+    </div>
+</div>
+
+<div class="modal fade" id="p3NuevoPlato" tabindex="-1" aria-labelledby="p3NuevoPlatoTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content p3-modal">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="p3NuevoPlatoTitulo">Registrar plato</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">
+            <div class="mb-3"><label for="p3NuevoNombre" class="form-label">Nombre del plato</label><input id="p3NuevoNombre" class="form-control" placeholder="Ej. Tacacho con cecina" /></div>
+            <div class="mb-3"><label for="p3NuevoPrecio" class="form-label">Precio (S/)</label><input id="p3NuevoPrecio" type="number" min="0" step="0.01" class="form-control" placeholder="0.00" /></div>
+            <div class="mb-3"><label for="p3NuevaCategoria" class="form-label">Categoría</label><select id="p3NuevaCategoria" class="form-select"><option>Seleccione una categoría</option><option>Entradas</option><option>Platos de fondo</option><option>Postres</option><option>Bebidas</option></select></div>
+            <div><label for="p3NuevaDescripcion" class="form-label">Descripción</label><textarea id="p3NuevaDescripcion" class="form-control" rows="3" placeholder="Breve descripción..."></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p3-btn-primary" data-bs-dismiss="modal">Guardar</button></div>
+    </div></div>
+</div>
+<div class="modal fade" id="p3EditarPlato" tabindex="-1" aria-labelledby="p3EditarPlatoTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content p3-modal">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="p3EditarPlatoTitulo">Editar plato</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">
+            <div class="mb-3"><label class="form-label" for="p3EditarNombre">Nombre</label><input id="p3EditarNombre" class="form-control" value="@platoSeleccionado?.Nombre" /></div>
+            <div class="mb-3"><label class="form-label" for="p3EditarPrecio">Precio (S/)</label><input id="p3EditarPrecio" type="number" min="0" step="0.01" class="form-control" value="@platoSeleccionado?.Precio" /></div>
+            <div class="mb-3"><label class="form-label" for="p3EditarCategoria">Categoría</label><select id="p3EditarCategoria" class="form-select" value="@platoSeleccionado?.Categoria"><option>Entradas</option><option>Platos de fondo</option><option>Postres</option><option>Bebidas</option></select></div>
+            <div><label class="form-label" for="p3EditarDescripcion">Descripción</label><textarea id="p3EditarDescripcion" class="form-control" rows="2">@platoSeleccionado?.Descripcion</textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p3-btn-primary" data-bs-dismiss="modal">Guardar</button></div>
+    </div></div>
+</div>
+<div class="modal fade" id="p3EliminarPlato" tabindex="-1" aria-labelledby="p3EliminarPlatoTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content p3-modal">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="p3EliminarPlatoTitulo">Eliminar plato</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">¿Deseas eliminar el plato <strong>@platoSeleccionado?.Nombre</strong>?</div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p3-btn-danger" data-bs-dismiss="modal">Eliminar</button></div>
+    </div></div>
+</div>
+
+@code {
+    private string busqueda = "";
+    private string categoria = "";
+    private string busquedaAplicada = "";
+    private string categoriaAplicada = "";
+    private PlatoDato? platoSeleccionado;
+
+    private readonly List<PlatoDato> platos = CartaRestaurante.Platos
+        .Select(p => new PlatoDato($"PL-{p.Id:000}", p.Nombre, p.Categoria, p.Precio, p.Descripcion))
+        .ToList();
+
+    private List<PlatoDato> PlatosFiltrados => platos.Where(p =>
+        (string.IsNullOrWhiteSpace(busquedaAplicada) || p.Nombre.Contains(busquedaAplicada, StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrEmpty(categoriaAplicada) || p.Categoria == categoriaAplicada)).ToList();
+
+    private void AplicarFiltros()
+    {
+        busquedaAplicada = busqueda.Trim();
+        categoriaAplicada = categoria;
+    }
+
+    private void LimpiarFiltros()
+    {
+        busqueda = "";
+        categoria = "";
+        AplicarFiltros();
+    }
+
+    private void SeleccionarPlato(PlatoDato plato) => platoSeleccionado = plato;
+
+    private static string EtiquetaCategoria(string nombre) => nombre switch
+    {
+        "Entradas" => "p3-tag-gold",
+        "Postres" => "p3-tag-teal",
+        "Bebidas" => "p3-tag-neutral",
+        _ => "p3-tag-green"
+    };
+
+    private record PlatoDato(string Codigo, string Nombre, string Categoria, decimal Precio, string Descripcion);
+}

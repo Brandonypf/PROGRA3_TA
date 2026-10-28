@@ -1,0 +1,80 @@
+@page "/atencion/mozo"
+@layout MozoLayout
+@using System.Linq
+@inject EstadoAtencion Estado
+
+<PageTitle>Panel del mozo | El Rincón Satipeño</PageTitle>
+
+<div class="rs-atn-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <div class="rs-atn-overline">ATENCIÓN EN SALÓN</div>
+        <h1>Panel del mozo</h1>
+        <p class="text-secondary mb-0">Hola, @Estado.MozoActual. Revisa tus mesas y continúa las atenciones pendientes.</p>
+    </div>
+    <span class="rs-atn-pill rs-atn-free">Servicio de salón</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mesas asignadas</span><strong>@MisMesas.Count()</strong><small>Distribución actual</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>En atención</span><strong>@MisMesas.Count(m => m.Estado == "Ocupada" && Estado.ObtenerPago(m.Numero) is null)</strong><small>Cuentas abiertas</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Próximas reservas</span><strong>@MisMesas.Count(m => m.Estado == "Reservada")</strong><small>Pendientes de llegada</small></div></div>
+</div>
+
+<section class="rs-atn-card p-3 p-md-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="h5 mb-1">Mis mesas</h2>
+            <p class="text-secondary small mb-0">Selecciona una mesa para consultar pedidos y cuentas.</p>
+        </div>
+        <div>
+            <label class="visually-hidden" for="filtrar-mesas">Estado de mesa</label>
+            <select id="filtrar-mesas" class="form-select" @bind="filtro">
+                <option value="Todos">Todos los estados</option>
+                <option value="Ocupada">Ocupadas</option>
+                <option value="Reservada">Reservadas</option>
+                <option value="Libre">Libres</option>
+            </select>
+        </div>
+    </div>
+    <div class="row g-3">
+        @foreach (var mesa in MesasVisibles)
+        {
+            <div class="col-md-6 col-xl-4">
+                <article class="rs-atn-mesa-card h-100 d-flex flex-column">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="rs-atn-table-icon" aria-hidden="true">🍽️</div>
+                        <span class="rs-atn-pill @EstadoAtencion.ClaseEstado(mesa.Estado)">@mesa.Estado</span>
+                    </div>
+                    <h3 class="h5 mb-1">Mesa @mesa.Numero.ToString("00")</h3>
+                    <p class="text-secondary small mb-3">@mesa.Zona · Capacidad: @mesa.Capacidad personas</p>
+                    <div class="rs-atn-mesa-detail"><span>Comensales</span><strong>@(mesa.Personas > 0 ? $"{mesa.Personas} personas" : "Sin clientes")</strong></div>
+                    <div class="rs-atn-mesa-detail"><span>Horario</span><strong>@mesa.Hora</strong></div>
+                    @if (Estado.ObtenerPago(mesa.Numero) is not null)
+                    {
+                        <div class="rs-atn-soft-note mt-2">Cuenta cerrada</div>
+                        <a class="btn rs-btn-outline w-100 mt-auto" href="@($"/atencion/pago/{mesa.Numero}")">Ver comprobante</a>
+                    }
+                    else if (mesa.Estado == "Ocupada")
+                    {
+                        <a class="btn rs-btn-primary w-100 mt-auto" href="@($"/atencion/mesa/{mesa.Numero}")">Atender mesa →</a>
+                    }
+                    else
+                    {
+                        <div class="small text-secondary mt-auto pt-3">@((mesa.Estado == "Reservada") ? "Pendiente de llegada" : "Disponible para atención")</div>
+                    }
+                </article>
+            </div>
+        }
+        @if (!MesasVisibles.Any())
+        {
+            <div class="col-12 text-secondary text-center py-4">No hay mesas asignadas con los filtros seleccionados.</div>
+        }
+    </div>
+</section>
+
+@code {
+    private string filtro = "Todos";
+
+    private IEnumerable<MesaAtencion> MisMesas => Estado.Mesas.Where(m => m.Mozo == Estado.MozoActual);
+    private IEnumerable<MesaAtencion> MesasVisibles => MisMesas.Where(m => filtro == "Todos" || m.Estado == filtro);
+}

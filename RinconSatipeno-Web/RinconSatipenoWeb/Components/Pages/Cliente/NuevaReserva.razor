@@ -1,0 +1,92 @@
+@page "/reservas/nueva"
+@using RinconSatipenoWeb.Components.Data
+@inject NavigationManager Navegacion
+
+<PageTitle>Nueva reserva | El Rincón Satipeño</PageTitle>
+<section class="rs-page-banner">
+    <div class="container text-center">
+        <span class="rs-eyebrow">TE ESTAMOS ESPERANDO</span>
+        <h1 class="rs-heading mt-2">Reserva tu mesa</h1>
+        <p class="rs-muted mb-0">Elige tu horario y completa tus datos para reservar una mesa.</p>
+    </div>
+</section>
+<div class="container rs-form-container pb-5">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="rs-panel p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <span class="rs-step-number">1</span>
+                    <div><h2 class="h4 mb-1">Detalles de tu visita</h2><p class="rs-muted mb-0 small">Selecciona cuándo quieres visitarnos.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="fecha" class="form-label">Fecha de visita</label>
+                        <input id="fecha" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" @bind="fecha" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="hora" class="form-label">Hora de visita</label>
+                        <input id="hora" type="time" class="form-control" step="60" value="@hora" @onchange="e => hora = e.Value?.ToString() ?? string.Empty" />
+                        <div class="form-text">Puedes elegir cualquier hora del día; confirmaremos la disponibilidad al reservar.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="personas" class="form-label">Número de personas</label>
+                        <input id="personas" type="number" min="1" max="8" class="form-control" @bind="personas" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="zona" class="form-label">Zona preferida</label>
+                        <select id="zona" class="form-select" @bind="zona">
+                            <option>Sin preferencia</option><option>Salón principal</option><option>Terraza</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="rs-info mt-3">Las reservas tienen una duración de hasta 2 horas.</div>
+                <hr class="my-4" />
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <span class="rs-step-number">2</span>
+                    <div><h2 class="h4 mb-1">Tus datos de contacto</h2><p class="rs-muted mb-0 small">Usaremos estos datos para identificar tu reserva.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label for="nombre" class="form-label">Nombre completo</label><input id="nombre" class="form-control" @bind="nombre" placeholder="Nombre y apellidos" /></div>
+                    <div class="col-md-6"><label for="telefono" class="form-label">Teléfono</label><input id="telefono" class="form-control" type="tel" @bind="telefono" placeholder="Número de contacto" /></div>
+                    <div class="col-12"><label for="correo" class="form-label">Correo electrónico</label><input id="correo" class="form-control" type="email" @bind="correo" placeholder="correo@gmail.com" /></div>
+                    <div class="col-12"><label for="observacion" class="form-label">Observaciones (opcional)</label><textarea id="observacion" class="form-control" rows="3" @bind="observaciones" placeholder="¿Hay algo que debamos tener en cuenta?"></textarea></div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(aviso))
+                {
+                    <div class="alert alert-warning mt-3" role="alert">@aviso</div>
+                }
+                <div class="d-flex flex-wrap justify-content-between gap-3 mt-4">
+                    <a class="btn rs-btn-outline" href="/">← Volver al inicio</a>
+                    <button type="button" class="btn rs-btn-primary" @onclick="Confirmar">Confirmar reserva →</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="rs-panel p-4 rs-side-card">
+                <div class="rs-side-icon">📅</div>
+                <h3 class="h5 mt-3">Una visita especial</h3>
+                <p class="rs-muted">Elige el día, la hora y tu zona preferida. Buscaremos la mesa que mejor se adapte a tus acompañantes.</p>
+                <hr /><div class="d-flex justify-content-between small mb-2"><span>Duración máxima</span><strong>2 horas</strong></div>
+                <div class="d-flex justify-content-between small"><span>Tolerancia</span><strong>15 minutos</strong></div>
+                <hr /><a class="rs-text-link" href="/reservas/gestionar">¿Ya tienes una reserva? →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private DateTime fecha = DateTime.Today.AddDays(1);
+    private string hora = "15:00";
+    private int personas = 2;
+    private string zona = "Sin preferencia";
+    private string nombre = "";
+    private string correo = "";
+    private string telefono = "";
+    private string observaciones = "";
+    private string aviso = "";
+
+    private void Confirmar()
+    {
+        Navegacion.NavigateTo("/reservas/confirmacion");
+    }
+}

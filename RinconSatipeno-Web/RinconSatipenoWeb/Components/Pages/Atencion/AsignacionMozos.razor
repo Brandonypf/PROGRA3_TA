@@ -1,0 +1,106 @@
+@page "/atencion/asignacion"
+@layout AdminLayout
+@using System.Linq
+@inject EstadoAtencion Estado
+
+<PageTitle>Asignación de mozos | El Rincón Satipeño</PageTitle>
+
+<div class="rs-atn-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <div class="rs-atn-overline">ADMINISTRACIÓN · SALÓN</div>
+        <h1>Asignación de mozos</h1>
+        <p class="text-secondary mb-0">Organiza las mesas y al personal encargado de cada atención.</p>
+    </div>
+    <a class="btn rs-btn-outline" href="/admin/mesas/estado">← Estado de mesas</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mesas totales</span><strong>@mesas.Count</strong><small>Salón y terraza</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mesas ocupadas</span><strong>@mesas.Count(m => m.Estado == "Ocupada")</strong><small>Atenciones en curso</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mozos del turno</span><strong>@Estado.Mozos.Count</strong><small>Personal disponible</small></div></div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(aviso))
+{
+    <div class="alert alert-success d-flex align-items-center gap-2" role="status"><span aria-hidden="true">✓</span> @aviso</div>
+}
+
+<section class="rs-atn-card p-3 p-md-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h5 mb-1">Distribución de mesas</h2>
+            <p class="text-secondary small mb-0">Selecciona al responsable de cada mesa para el turno actual.</p>
+        </div>
+        <a class="btn rs-btn-primary" href="/admin/mesas/estado">Guardar asignaciones</a>
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-7">
+            <label class="form-label" for="buscar-mesa">Buscar mesa o zona</label>
+            <input id="buscar-mesa" class="form-control" placeholder="Mesa 01, Salón, Terraza..." @bind="busqueda" @bind:event="oninput" />
+        </div>
+        <div class="col-md-5">
+            <label class="form-label" for="filtro-estado">Estado de mesa</label>
+            <select id="filtro-estado" class="form-select" @bind="estadoFiltrado">
+                <option value="Todos">Todos los estados</option>
+                <option value="Libre">Libre</option>
+                <option value="Reservada">Reservada</option>
+                <option value="Ocupada">Ocupada</option>
+            </select>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle rs-atn-table mb-0">
+            <thead><tr><th>Mesa</th><th>Zona</th><th>Capacidad</th><th>Estado</th><th>Mozo asignado</th></tr></thead>
+            <tbody>
+                @foreach (var mesa in MesasFiltradas)
+                {
+                    <tr>
+                        <td class="fw-semibold">Mesa @mesa.Numero.ToString("00")</td>
+                        <td>@mesa.Zona</td>
+                        <td>@mesa.Capacidad personas</td>
+                        <td><span class="rs-atn-pill @EstadoAtencion.ClaseEstado(mesa.Estado)">@mesa.Estado</span></td>
+                        <td>
+                            <select class="form-select form-select-sm rs-atn-select" aria-label="Mozo de mesa @mesa.Numero" @bind="mesa.Mozo">
+                                @foreach (var mozo in Estado.Mozos)
+                                {
+                                    <option value="@mozo">@mozo</option>
+                                }
+                            </select>
+                        </td>
+                    </tr>
+                }
+                @if (!MesasFiltradas.Any())
+                {
+                    <tr><td colspan="5" class="text-center text-secondary py-4">No se encontraron mesas con estos filtros.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private List<MesaAtencion> mesas = new();
+    private string busqueda = "";
+    private string estadoFiltrado = "Todos";
+    private string aviso = "";
+
+    protected override void OnInitialized()
+    {
+        mesas = Estado.Mesas.Select(m => new MesaAtencion
+        {
+            Numero = m.Numero,
+            Zona = m.Zona,
+            Capacidad = m.Capacidad,
+            Personas = m.Personas,
+            Estado = m.Estado,
+            Mozo = m.Mozo,
+            Hora = m.Hora
+        }).ToList();
+    }
+
+    private IEnumerable<MesaAtencion> MesasFiltradas => mesas.Where(m =>
+        (estadoFiltrado == "Todos" || m.Estado == estadoFiltrado) &&
+        (string.IsNullOrWhiteSpace(busqueda) ||
+         $"Mesa {m.Numero:00} {m.Zona}".Contains(busqueda, StringComparison.OrdinalIgnoreCase)));
+
+}

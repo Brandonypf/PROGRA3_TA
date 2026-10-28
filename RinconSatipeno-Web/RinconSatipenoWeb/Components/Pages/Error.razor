@@ -1,0 +1,15 @@
+@page "/Error"
+@using System.Diagnostics
+<PageTitle>Error | El Rincón Satipeño</PageTitle>
+<div class="container py-5"><div class="rs-panel p-5 text-center">
+    <h1 class="text-danger">Ocurrió un error</h1>
+    <p>No se pudo mostrar esta página. Intenta nuevamente.</p>
+    @if (ShowRequestId) { <p class="small text-muted">Identificador: <code>@RequestId</code></p> }
+    <a class="btn rs-btn-primary" href="/">Volver al inicio</a>
+</div></div>
+@code {
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    private string? RequestId { get; set; }
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    protected override void OnInitialized() => RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

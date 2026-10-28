@@ -1,0 +1,41 @@
+@page "/admin"
+@page "/admin/mesas/estado"
+<PageTitle>Estado de mesas | El Rincón Satipeño</PageTitle>
+<div class="admin-page-heading">
+    <div><span class="admin-eyebrow">ADMINISTRACIÓN / MESAS</span><h1>Estado de mesas</h1><p>Una vista rápida de los ambientes del restaurante.</p></div>
+    <a class="btn btn-primary" href="/admin/mesas"><i class="bi bi-gear me-2" aria-hidden="true"></i>Gestionar mesas</a>
+</div>
+<div class="row g-3 mb-4">
+    @foreach (var estado in new[] { "Libre", "Reservada", "Ocupada" })
+    {
+        <div class="col-sm-4"><div class="card admin-stat @DatosMesasDemo.ClaseEstado(estado)"><div class="card-body"><span>Mesas · @estado</span><strong>@DatosMesasDemo.Mesas.Count(m => m.Estado == estado)</strong><small>De @DatosMesasDemo.Mesas.Count mesas en total</small></div></div></div>
+    }
+</div>
+<section class="card mb-4"><div class="card-body row g-3 align-items-end">
+    <div class="col-md-5"><label for="zona" class="form-label">Ambiente</label><select id="zona" class="form-select" @bind="zona"><option value="">Todos los ambientes</option><option>Salón principal</option><option>Terraza</option></select></div>
+    <div class="col-md-5"><label for="estado" class="form-label">Estado</label><select id="estado" class="form-select" @bind="filtroEstado"><option value="">Todos los estados</option><option>Libre</option><option>Reservada</option><option>Ocupada</option></select></div>
+    <div class="col-md-2"><button class="btn btn-outline-secondary w-100" @onclick="Limpiar">Limpiar</button></div>
+</div></section>
+<div class="row g-3">
+    @foreach (var mesa in MesasFiltradas)
+    {
+        <div class="col-sm-6 col-xl-3"><article class="card admin-mesa h-100 @DatosMesasDemo.ClaseEstado(mesa.Estado)">
+            <div class="card-body"><div class="d-flex justify-content-between align-items-center mb-3"><i class="bi bi-grid-3x3-gap admin-table-icon" aria-hidden="true"></i><span class="admin-status @DatosMesasDemo.ClaseEstado(mesa.Estado)">@mesa.Estado</span></div>
+            <h2 class="h5">Mesa @mesa.Numero.ToString("00")</h2><p class="mb-1">@mesa.Zona</p><p class="small text-secondary"><i class="bi bi-people me-1" aria-hidden="true"></i> @mesa.Capacidad personas</p>
+            <button class="btn btn-outline-primary w-100" @onclick="() => seleccionada = mesa" aria-label="@($"Ver detalle de mesa {mesa.Numero}")">Ver detalle</button></div>
+        </article></div>
+    }
+</div>
+@if (!MesasFiltradas.Any()) { <div class="alert alert-info mt-3" role="status">No hay mesas con estos filtros.</div> }
+@if (seleccionada is not null)
+{
+    <section class="card mt-4" aria-label="Detalle de mesa"><div class="card-body"><div class="d-flex justify-content-between gap-3"><h2 class="h5">Mesa @seleccionada.Numero.ToString("00") · @seleccionada.Estado</h2><button class="btn-close" aria-label="Cerrar detalle" @onclick="() => seleccionada = null"></button></div>
+    <p>@seleccionada.Detalle</p><a class="btn btn-primary" href="/admin/reservas/calendario">Consultar reservas</a></div></section>
+}
+<div class="mt-4"><a class="btn btn-outline-secondary" href="/">← Volver al restaurante</a></div>
+@code {
+    private string zona = "", filtroEstado = "";
+    private MesaDemo? seleccionada;
+    private IEnumerable<MesaDemo> MesasFiltradas => DatosMesasDemo.Mesas.Where(m => (zona == "" || m.Zona == zona) && (filtroEstado == "" || m.Estado == filtroEstado));
+    private void Limpiar() { zona = ""; filtroEstado = ""; seleccionada = null; }
+}

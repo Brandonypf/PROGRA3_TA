@@ -1,0 +1,134 @@
+@page "/reservas/gestionar"
+@using RinconSatipenoWeb.Components.Data
+
+<PageTitle>Gestionar reserva | El Rincón Satipeño</PageTitle>
+<section class="rs-page-banner">
+    <div class="container text-center">
+        <span class="rs-eyebrow">TU VISITA, A TU MANERA</span>
+        <h1 class="rs-heading mt-2">Gestiona tu reserva</h1>
+    </div>
+</section>
+<div class="container rs-form-container pb-5">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <section class="rs-panel p-4 h-100">
+                <h2 class="h4">Buscar una reserva</h2>
+                <label class="form-label mt-2" for="codigo">Código de reserva</label>
+                <input class="form-control" id="codigo" placeholder="Ej. SAT-2026-001" @bind="codigo" />
+                <label class="form-label mt-3" for="correo-consulta">Correo electrónico</label>
+                <input class="form-control" type="email" id="correo-consulta" placeholder="tucorreo@gmail.com" @bind="correo" />
+                <button class="btn rs-btn-primary mt-4 w-100" type="button" @onclick="Buscar">Buscar reserva</button>
+            </section>
+        </div>
+        <div class="col-lg-7">
+            <section class="rs-panel p-4 h-100" aria-live="polite">
+                @if (!string.IsNullOrWhiteSpace(aviso))
+                {
+                    <div class="alert @(error ? "alert-warning" : "alert-success")" role="alert">@aviso</div>
+                }
+                @if (reserva is null)
+                {
+                    <div class="text-center py-5">
+                        <div class="rs-side-icon mx-auto">📩</div>
+                        <h2 class="h5 mt-3">Encuentra tu reserva</h2>
+                        <p class="rs-muted mb-0">Introduce tu correo electrónico y código de reserva, luego pulsa «Buscar reserva».</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                        <div><span class="rs-eyebrow">RESERVA</span><h2 class="h4 mt-2 mb-0">@reserva.Codigo</h2></div>
+                        <span class="rs-status @(reserva.Estado == "Confirmada" ? "rs-status-green" : "rs-atn-reserved")">@reserva.Estado</span>
+                    </div>
+                    <hr />
+                    <div class="row gy-3 mb-3">
+                        <div class="col-sm-6"><span class="rs-summary-label">Cliente</span><strong>@reserva.Nombre</strong></div>
+                        <div class="col-sm-6"><span class="rs-summary-label">Teléfono</span><strong>@reserva.Telefono</strong></div>
+                        <div class="col-sm-6"><span class="rs-summary-label">Fecha</span><strong>@reserva.Fecha.ToString("dd/MM/yyyy")</strong></div>
+                        <div class="col-sm-6"><span class="rs-summary-label">Hora</span><strong>@reserva.Hora</strong></div>
+                        <div class="col-sm-6"><span class="rs-summary-label">Personas</span><strong>@reserva.Personas</strong></div>
+                        <div class="col-sm-6"><span class="rs-summary-label">Zona y mesa</span><strong>@reserva.Zona · Mesa @reserva.NumeroMesa.ToString("00")</strong></div>
+                    </div>
+                    @if (reserva.Estado == "Confirmada")
+                    {
+                        <details class="rs-details mt-4">
+                            <summary>✏️ Modificar reserva</summary>
+                            <div class="row g-3 mt-2">
+                                <div class="col-sm-6"><label class="form-label" for="nueva-fecha">Nueva fecha</label><input id="nueva-fecha" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" @bind="nuevaFecha" /></div>
+                                <div class="col-sm-6"><label class="form-label" for="nueva-hora">Nueva hora</label><input id="nueva-hora" type="time" step="60" class="form-control" value="@nuevaHora" @onchange="e => nuevaHora = e.Value?.ToString() ?? string.Empty" /></div>
+                                <div class="col-sm-6"><label class="form-label" for="nuevas-personas">Número de personas</label><input id="nuevas-personas" type="number" min="1" class="form-control" @bind="nuevasPersonas" /></div>
+                                <div class="col-sm-6"><label class="form-label">Mesa asignada</label><input class="form-control" value="@TextoMesa" readonly /></div>
+                                <div class="col-12"><button type="button" class="btn rs-btn-primary" @onclick="ConfirmarModificar">Confirmar modificación</button></div>
+                            </div>
+                        </details>
+                        <details class="rs-details rs-details-danger mt-3">
+                            <summary>🗑️ Cancelar reserva</summary>
+                            <div class="pt-3"><p class="rs-muted mb-3">Al cancelar podrás realizar otra reserva con diferente mesa u horario.</p><button type="button" class="btn rs-btn-danger" @onclick="ConfirmarCancelar">Confirmar cancelación</button></div>
+                        </details>
+                    }
+                }
+            </section>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+        <a class="rs-text-link" href="/">← Volver a inicio</a><span class="mx-3 rs-muted">·</span>
+        <a class="rs-text-link" href="/reservas/nueva">Nueva reserva →</a>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "ver")] public string? Ver { get; set; }
+    [Inject] private NavigationManager Navegacion { get; set; } = default!;
+
+    private string codigo = "";
+    private string correo = "";
+    private string aviso = "";
+    private bool error;
+    private ReservaCliente? reserva;
+    private DateTime nuevaFecha = DateTime.Today.AddDays(1);
+    private string nuevaHora = "19:00";
+    private int nuevasPersonas = 2;
+    private string TextoMesa => $"Mesa {reserva?.NumeroMesa:00} · {CapacidadMesa} personas máximo";
+    private int CapacidadMesa => RinconSatipenoWeb.Components.Pages.Mesas.DatosMesasDemo.Mesas
+        .FirstOrDefault(m => m.Numero == reserva?.NumeroMesa)?.Capacidad ?? 0;
+
+    protected override void OnParametersSet()
+    {
+        if (Ver == "1")
+            Mostrar(EstadoReservas.Ejemplo);
+        else
+            reserva = null;
+    }
+
+    private void Mostrar(ReservaCliente encontrada)
+    {
+        reserva = encontrada; codigo = encontrada.Codigo; correo = encontrada.Correo;
+        nuevaFecha = encontrada.Fecha; nuevaHora = encontrada.Hora;
+        nuevasPersonas = encontrada.Personas;
+        aviso = ""; error = false;
+    }
+
+    private void Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(codigo) || string.IsNullOrWhiteSpace(correo))
+        {
+            reserva = null;
+            error = true;
+            aviso = "Ingresa el código y correo electrónico para buscar tu reserva.";
+            return;
+        }
+
+        // La consulta muestra únicamente una reserva predefinida; no recupera datos ingresados en otras pantallas.
+        Mostrar(EstadoReservas.Ejemplo);
+    }
+
+    private void ConfirmarModificar()
+    {
+        Navegacion.NavigateTo("/reservas/confirmacion");
+    }
+
+    private void ConfirmarCancelar()
+    {
+        Navegacion.NavigateTo("/reservas/nueva");
+    }
+}

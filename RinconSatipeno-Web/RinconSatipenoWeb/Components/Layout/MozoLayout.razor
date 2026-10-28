@@ -1,0 +1,40 @@
+@inherits LayoutComponentBase
+@inject RinconSatipenoWeb.Components.Pages.Atencion.EstadoAtencion Estado
+@inject NavigationManager Navegacion
+
+<div class="rs-admin-shell">
+    <aside class="rs-admin-sidebar">
+        <a class="rs-admin-brand" href="/atencion/mozo">
+            <span class="rs-admin-brand-mark">✦</span>
+            <span>El Rincón <strong>Satipeño</strong><small>Servicio de salón</small></span>
+        </a>
+        <div class="rs-admin-menu-title">MI JORNADA</div>
+        <nav class="nav flex-column rs-admin-menu" aria-label="Navegación del mozo">
+            <NavLink class="nav-link" href="/atencion/mozo" Match="NavLinkMatch.All">
+                <i class="bi bi-grid-3x3-gap me-2" aria-hidden="true"></i>Mis mesas
+            </NavLink>
+        </nav>
+        <div class="rs-admin-sidebar-foot small">
+            <div class="mb-2">@Estado.MozoActual</div>
+            <button type="button" class="btn btn-outline-light btn-sm w-100" @onclick="Salir">
+                <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Cerrar sesión
+            </button>
+        </div>
+    </aside>
+    <div class="rs-admin-content">
+        <header class="rs-admin-topbar d-flex align-items-center justify-content-between gap-3">
+            <div class="fw-semibold rs-admin-top-title">El Rincón Satipeño <span class="fw-normal text-secondary">/ Salón</span></div>
+            <span class="rs-admin-user"><i class="bi bi-person-circle me-1" aria-hidden="true"></i>@Estado.MozoActual</span>
+        </header>
+        <main class="rs-admin-main container-fluid">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    private void Salir()
+    {
+        Navegacion.NavigateTo("/empleados/login");
+    }
+}

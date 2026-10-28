@@ -1,0 +1,61 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navegacion
+
+<div class="p4-shell">
+    <aside class="p4-sidebar d-none d-lg-flex flex-column">
+        <a class="p4-sidebar-brand" href="/admin/empleados">
+            <span class="p4-logo">✦</span>
+            <span>El Rincón<br /><strong>Satipeño</strong><small>GESTIÓN INTERNA</small></span>
+        </a>
+        <div class="p4-sidebar-section">MESAS Y RESERVAS</div>
+        <NavLink class="p4-sidebar-link" href="/admin/mesas/estado"><span>▦</span> Estado de mesas</NavLink>
+        <NavLink class="p4-sidebar-link" href="/admin/reservas/calendario"><span>▣</span> Calendario de reservas</NavLink>
+        <NavLink class="p4-sidebar-link" href="/admin/mesas" Match="NavLinkMatch.All"><span>▤</span> Gestión de mesas</NavLink>
+        <NavLink class="p4-sidebar-link" href="/atencion/asignacion"><span>♙</span> Asignar mozos</NavLink>
+        <div class="p4-sidebar-section">PERSONAL</div>
+        <NavLink class="p4-sidebar-link" href="/admin/empleados"><span>♙</span> Empleados</NavLink>
+        <div class="p4-sidebar-section">RESTAURANTE</div>
+        <NavLink class="p4-sidebar-link" href="/admin/productos"><span>◉</span> Platos</NavLink>
+        <NavLink class="p4-sidebar-link" href="/admin/recetas"><span>▧</span> Recetas</NavLink>
+        <NavLink class="p4-sidebar-link" href="/admin/insumos"><span>▤</span> Insumos</NavLink>
+        <NavLink class="p4-sidebar-link" href="/admin/inventario/movimientos"><span>↕</span> Movimientos</NavLink>
+        <NavLink class="p4-sidebar-link" href="/admin/inventario/alertas"><span>!</span> Alertas de stock</NavLink>
+        <div class="p4-sidebar-section">REPORTES</div>
+        <NavLink class="p4-sidebar-link" href="/admin/reportes/ventas"><span>▥</span> Ventas</NavLink>
+        <NavLink class="p4-sidebar-link" href="/admin/reportes/consumo-insumos"><span>▦</span> Consumo de insumos</NavLink>
+        <div class="mt-auto p4-sidebar-bottom">
+            <div class="p4-mini-user"><span class="p4-avatar">AD</span><span><strong>Administrador</strong><small>Gestión del restaurante</small></span></div>
+            <button type="button" class="btn btn-sm btn-outline-light w-100 mt-3" @onclick="Salir">Cerrar sesión</button>
+        </div>
+    </aside>
+    <div class="p4-main">
+        <header class="p4-topbar">
+            <div><div class="p4-topbar-name">El Rincón Satipeño</div><span class="p4-topbar-caption">Panel administrativo</span></div>
+            <div class="d-none d-sm-flex align-items-center gap-2"><span class="p4-status-dot"></span><span class="small text-secondary">Administración</span><span class="p4-avatar ms-2">AD</span></div>
+        </header>
+        <nav class="p4-mobile-nav d-lg-none" aria-label="Navegación administrativa">
+            <NavLink href="/admin/mesas/estado">Estado de mesas</NavLink>
+            <NavLink href="/admin/reservas/calendario">Reservas</NavLink>
+            <NavLink href="/admin/mesas" Match="NavLinkMatch.All">Gestión de mesas</NavLink>
+            <NavLink href="/atencion/asignacion">Asignar mozos</NavLink>
+            <NavLink href="/admin/empleados">Empleados</NavLink>
+            <NavLink href="/admin/productos">Platos</NavLink>
+            <NavLink href="/admin/recetas">Recetas</NavLink>
+            <NavLink href="/admin/insumos">Insumos</NavLink>
+            <NavLink href="/admin/inventario/movimientos">Movimientos</NavLink>
+            <NavLink href="/admin/inventario/alertas">Alertas</NavLink>
+            <NavLink href="/admin/reportes/ventas">Ventas</NavLink>
+            <NavLink href="/admin/reportes/consumo-insumos">Consumo</NavLink>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="Salir">Salir</button>
+        </nav>
+        <main class="p4-main-content">@Body</main>
+    </div>
+</div>
+
+
+@code {
+    private void Salir()
+    {
+        Navegacion.NavigateTo("/empleados/login");
+    }
+}

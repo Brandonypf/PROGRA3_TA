@@ -1,0 +1,49 @@
+@page "/reservas/confirmacion"
+@using RinconSatipenoWeb.Components.Data
+
+<PageTitle>Confirmación de reserva | El Rincón Satipeño</PageTitle>
+<div class="container rs-narrow py-5">
+    <div class="rs-panel text-center p-4 p-md-5">
+        @if (reserva is null)
+        {
+            <h1 class="rs-heading mt-2">Consulta tu reserva</h1>
+            <p class="rs-muted">Puedes consultar tu reserva con tu correo y código de confirmación.</p>
+            <a class="btn rs-btn-primary" href="/reservas/gestionar">Buscar reserva</a>
+        }
+        else
+        {
+            <div class="rs-success-icon">✓</div>
+            <span class="rs-eyebrow mt-3 d-block">RESERVA CONFIRMADA</span>
+            <h1 class="rs-heading mt-2">¡El Rincón Satipeño te espera!</h1>
+            <p class="rs-muted">Guarda tu código para consultar tu reserva cuando lo necesites.</p>
+            <div class="rs-booking-summary text-start mt-4">
+                <div class="text-center pb-3 mb-3 rs-summary-header">
+                    <span class="rs-muted small">Código de reserva</span>
+                    <div class="rs-booking-code">@reserva.Codigo</div>
+                </div>
+                <div class="row gy-3">
+                    <div class="col-sm-6"><span class="rs-summary-label">Cliente</span><strong>@reserva.Nombre</strong></div>
+                    <div class="col-sm-6"><span class="rs-summary-label">Estado</span><span class="rs-status rs-status-green">@reserva.Estado</span></div>
+                    <div class="col-sm-6"><span class="rs-summary-label">Fecha</span><strong>@reserva.Fecha.ToString("dd/MM/yyyy")</strong></div>
+                    <div class="col-sm-6"><span class="rs-summary-label">Hora</span><strong>@reserva.Hora</strong></div>
+                    <div class="col-sm-6"><span class="rs-summary-label">Personas</span><strong>@reserva.Personas personas</strong></div>
+                    <div class="col-sm-6"><span class="rs-summary-label">Zona y mesa</span><strong>@reserva.Zona · Mesa @reserva.NumeroMesa.ToString("00")</strong></div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center flex-wrap gap-2">
+                <a class="btn rs-btn-primary" href="@EnlaceGestion">Modificar reserva →</a>
+                <a class="btn rs-btn-outline" href="/">Volver al inicio</a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private ReservaCliente? reserva;
+    private string EnlaceGestion => "/reservas/gestionar?ver=1";
+
+    protected override void OnInitialized()
+    {
+        reserva = EstadoReservas.Ejemplo;
+    }
+}

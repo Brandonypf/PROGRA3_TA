@@ -1,0 +1,232 @@
+@page "/admin/reservas/calendario"
+@using System.Globalization
+
+<PageTitle>Calendario de reservas | El Rincón Satipeño</PageTitle>
+
+<div class="admin-page-heading">
+    <div>
+        <span class="admin-eyebrow">ADMINISTRACIÓN / RESERVAS</span>
+        <h1>Calendario de reservas</h1>
+        <p>Consulta las reservas y organiza la disponibilidad del restaurante.</p>
+    </div>
+
+    <a class="btn btn-primary" href="/admin/mesas/estado">
+        <i class="bi bi-grid me-2" aria-hidden="true"></i>
+        Ver estado de mesas
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card admin-stat">
+            <div class="card-body">
+                <span>Reservas del mes</span>
+                <strong>@ReservasMes.Count()</strong>
+                <small class="text-capitalize">
+                    @mes.ToString("MMMM yyyy", cultura)
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-4">
+        <div class="card admin-stat stat-gold">
+            <div class="card-body">
+                <span>Reservas del día seleccionado</span>
+                <strong>@ReservasDia.Count()</strong>
+                <small>@seleccion.ToString("dd/MM/yyyy")</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-4">
+        <div class="card admin-stat stat-teal">
+            <div class="card-body">
+                <span>Personas esperadas</span>
+                <strong>@ReservasDia.Sum(r => r.Personas)</strong>
+                <small>Para el día seleccionado</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h2 class="h5 mb-0 text-capitalize">
+                @mes.ToString("MMMM yyyy", cultura)
+            </h2>
+
+            <div class="d-flex gap-2">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        aria-label="Mes anterior"
+                        @onclick="() => CambiarMes(-1)">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        @onclick="IrAHoy">
+                    Hoy
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        aria-label="Mes siguiente"
+                        @onclick="() => CambiarMes(1)">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <p class="small text-secondary">
+            Selecciona una fecha para consultar sus reservas.
+        </p>
+
+        <div class="admin-calendar-scroll">
+            <div class="admin-calendar">
+                @foreach (var nombre in diasSemana)
+                {
+                    <div class="calendar-weekday">@nombre</div>
+                }
+
+                @for (int celda = 0; celda < 42; celda++)
+                {
+                    var fecha = InicioCuadricula.AddDays(celda);
+                    var cantidad = ObtenerReservas(fecha).Count();
+
+                    <button type="button"
+                            class="calendar-day
+                                   @(fecha.Month != mes.Month ? "other-month" : "")
+                                   @(fecha == seleccion ? "selected" : "")"
+                            @onclick="() => ElegirFecha(fecha)"
+                            aria-pressed="@(fecha == seleccion ? "true" : "false")"
+                            aria-label="@($"{fecha:dd/MM/yyyy}, {cantidad} reservas")">
+
+                        <span>@fecha.Day</span>
+
+                        @if (cantidad > 0)
+                        {
+                            <small>
+                                @cantidad @(cantidad == 1 ? "reserva" : "reservas")
+                            </small>
+                        }
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <div class="card-body border-bottom">
+        <h2 class="h5 mb-0">
+            Reservas · @seleccion.ToString("dd 'de' MMMM 'de' yyyy", cultura)
+        </h2>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <caption class="px-3">
+                Reservas del día seleccionado
+            </caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Hora</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Personas</th>
+                    <th scope="col">Mesa</th>
+                    <th scope="col">Estado</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var reserva in ReservasDia)
+                {
+                    <tr>
+                        <td>@reserva.Hora</td>
+                        <td>@reserva.Cliente</td>
+                        <td>@reserva.Personas</td>
+                        <td>@reserva.Mesa.ToString("00")</td>
+                        <td>
+                            <span class="admin-status estado-libre">
+                                Confirmada
+                            </span>
+                        </td>
+                    </tr>
+                }
+
+                @if (!ReservasDia.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-secondary">
+                            <i class="bi bi-calendar3 d-block fs-3 mb-2"
+                               aria-hidden="true"></i>
+                            No hay reservas para esta fecha.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<a class="btn btn-outline-secondary mt-4" href="/admin/mesas/estado">
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+    Volver a mesas
+</a>
+
+@code {
+    private readonly CultureInfo cultura =
+        CultureInfo.GetCultureInfo("es-PE");
+
+    private readonly string[] diasSemana =
+    {
+        "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"
+    };
+
+    private DateTime mes =
+        new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    private DateTime seleccion = DateTime.Today;
+
+    private DateTime InicioCuadricula =>
+        mes.AddDays(-(((int)mes.DayOfWeek + 6) % 7));
+
+    private IEnumerable<ReservaDemo> ReservasMes =>
+        mes.Year == 2026 && mes.Month == 10
+            ? DatosMesasDemo.Reservas
+            : Array.Empty<ReservaDemo>();
+
+    private IEnumerable<ReservaDemo> ReservasDia =>
+        ObtenerReservas(seleccion).OrderBy(r => r.Hora);
+
+    private IEnumerable<ReservaDemo> ObtenerReservas(DateTime fecha)
+    {
+        if (fecha.Year != 2026 || fecha.Month != 10)
+        {
+            return Array.Empty<ReservaDemo>();
+        }
+
+        return DatosMesasDemo.Reservas.Where(r => r.Dia == fecha.Day);
+    }
+
+    private void CambiarMes(int cambio)
+    {
+        mes = mes.AddMonths(cambio);
+        seleccion = mes;
+    }
+
+    private void ElegirFecha(DateTime fecha)
+    {
+        seleccion = fecha;
+        mes = new DateTime(fecha.Year, fecha.Month, 1);
+    }
+
+    private void IrAHoy()
+    {
+        ElegirFecha(DateTime.Today);
+    }
+}

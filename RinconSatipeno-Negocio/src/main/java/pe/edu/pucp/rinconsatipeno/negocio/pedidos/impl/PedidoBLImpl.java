@@ -1,0 +1,155 @@
+package pe.edu.pucp.rinconsatipeno.negocio.pedidos.impl;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import pe.edu.pucp.rinconsatipeno.modelo.cuentas.CuentaConsumo;
+import pe.edu.pucp.rinconsatipeno.modelo.cuentas.EstadoCuenta;
+import pe.edu.pucp.rinconsatipeno.modelo.pedidos.DetallePedido;
+import pe.edu.pucp.rinconsatipeno.modelo.pedidos.Pedido;
+import pe.edu.pucp.rinconsatipeno.modelo.platos.Producto;
+import pe.edu.pucp.rinconsatipeno.negocio.BLException;
+import pe.edu.pucp.rinconsatipeno.negocio.pedidos.PedidoBL;
+import pe.edu.pucp.rinconsatipeno.dao.cuentas.CuentaConsumoDAO;
+import pe.edu.pucp.rinconsatipeno.dao.pedidos.PedidoDAO;
+import pe.edu.pucp.rinconsatipeno.dao.platos.PlatoDAO;
+import pe.edu.pucp.rinconsatipeno.dao.cuentas.impl.CuentaConsumoDAOImpl;
+import pe.edu.pucp.rinconsatipeno.dao.pedidos.impl.PedidoDAOImpl;
+import pe.edu.pucp.rinconsatipeno.dao.platos.impl.PlatoDAOImpl;
+import pe.edu.pucp.rinconsatipeno.dao.transacciones.TransactionsManager;
+
+public class PedidoBLImpl implements PedidoBL {
+
+    //Nos aseguramos que la clase solo sea asignada una vez (durante su creación)
+    private final PedidoDAO pedidoDAO = new PedidoDAOImpl();
+    private final CuentaConsumoDAO cuentaDAO = new CuentaConsumoDAOImpl();
+    private final PlatoDAO platoDAO = new PlatoDAOImpl();
+
+    @Override
+    public List<Pedido> findAll() throws BLException {
+        try {
+            return pedidoDAO.findAll();
+        } catch (SQLException variableException) {
+            throw new BLException("No se pudo listar todos los pedidos", variableException);
+        }
+    }
+
+    @Override
+    public Pedido findBy(Integer id) throws BLException {
+        try {
+            return pedidoDAO.findBy(id);
+        } catch (SQLException variableException) {
+            throw new BLException("No se pudo encontrar el pedido", variableException);
+        }
+    }
+
+    @Override
+    public void insert(Pedido pedido) throws BLException {
+        validarYCalcular(pedido);
+
+        TransactionsManager.iniciar();
+        try {
+            pedidoDAO.insert(pedido);
+            TransactionsManager.commit();
+        } catch (SQLException variableException) {
+            TransactionsManager.rollback();
+            throw new BLException("No se pudo insertar el pedido", variableException);
+        }
+    }
+
+    @Override
+    public void update(Pedido aux) throws BLException {
+        Pedido existente = validarExiste(aux.getIdPedido());
+        validarCuentaAbierta(existente.getCuentaConsumo());   // no se edita un pedido de una cuenta ya cerrada/pagada
+        validarYCalcular(aux);
+
+        TransactionsManager.iniciar();
+        try {
+            pedidoDAO.update(aux);
+            TransactionsManager.commit();
+        } catch (SQLException variableException) {
+            TransactionsManager.rollback();
+            throw new BLException("No se pudo actualizar el pedido", variableException);
+        }
+    }
+
+    @Override
+    public void delete(Integer id) throws BLException {
+        Pedido pedido = validarExiste(id);
+        validarCuentaAbierta(pedido.getCuentaConsumo());
+
+        TransactionsManager.iniciar();
+        try {
+            pedidoDAO.delete(id);
+            TransactionsManager.commit();
+        } catch (SQLException variableException) {
+            TransactionsManager.rollback();
+            throw new BLException("No se pudo eliminar el pedido", variableException);
+        }
+    }
+
+    // Devuelve el pedido si existe; si no, lanza BLException
+    public Pedido validarExiste(int id) throws BLException {
+        Pedido pedido = findBy(id);
+        if (pedido == null) {
+            throw new BLException("No se encontró la existencia del pedido");
+        }
+        return pedido;
+    }
+
+    private void validarYCalcular(Pedido pedido) throws BLException {
+        validarCuentaAbierta(pedido.getCuentaConsumo());
+
+        if (pedido.getDetalles().isEmpty()) {
+            throw new BLException("El pedido debe tener al menos un detalle");
+        }
+
+        // El precio y el subtotal no se confían al cliente: se recalculan con el precio actual del plato
+        List<DetallePedido> detallesCalculados = new ArrayList<>();
+        for (DetallePedido detalle : pedido.getDetalles()) {
+            if (detalle.getCantidadPlatos() < 1) {
+                throw new BLException("La cantidad de cada detalle debe ser al menos 1");
+            }
+
+            Producto producto = buscarPlato(detalle.getPlato().getIdPlato());
+            double precio = producto.getPrecio();
+
+            DetallePedido detalleCalculado = new DetallePedido(detalle);
+            detalleCalculado.setPrecioUnitario(precio);
+            detalleCalculado.setSubtotal(precio * detalle.getCantidadPlatos());
+            detallesCalculados.add(detalleCalculado);
+        }
+        pedido.setDetalles(detallesCalculados);
+    }
+
+    // Un pedido solo puede pertenecer a una cuenta de consumo existente y ABIERTA
+    private void validarCuentaAbierta(CuentaConsumo cuenta) throws BLException {
+        if (cuenta == null) {
+            throw new BLException("El pedido debe tener una cuenta de consumo");
+        }
+        CuentaConsumo actual;
+        try {
+            actual = cuentaDAO.findBy(cuenta.getIdCuenta());
+        } catch (SQLException variableException) {
+            throw new BLException("No se pudo verificar la cuenta de consumo", variableException);
+        }
+        if (actual == null) {
+            throw new BLException("La cuenta de consumo del pedido no existe");
+        }
+        if (actual.getEstado() != EstadoCuenta.ABIERTA) {
+            throw new BLException("Solo se pueden registrar o modificar pedidos en una cuenta ABIERTA");
+        }
+    }
+
+    private Producto buscarPlato(int idPlato) throws BLException {
+        try {
+            Producto producto = platoDAO.findBy(idPlato);
+            if (producto == null) {
+                throw new BLException("No existe un plato con id " + idPlato);
+            }
+            return producto;
+        } catch (SQLException variableException) {
+            throw new BLException("No se pudo recuperar el plato del detalle", variableException);
+        }
+    }
+}

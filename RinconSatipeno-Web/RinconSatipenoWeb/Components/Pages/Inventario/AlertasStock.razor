@@ -1,0 +1,34 @@
+@page "/admin/inventario/alertas"
+
+<PageTitle>Alertas de stock | El Rincón Satipeño</PageTitle>
+<HeadContent><link rel="stylesheet" href="/css/p3.css" /></HeadContent>
+
+<div class="p3-page container-fluid py-4 px-3 px-lg-4">
+    <nav aria-label="Ubicación" class="small mb-2"><a href="/">Inicio</a> / Administración / Alertas</nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><h1 class="p3-title mb-1">Alertas de stock mínimo</h1><p class="p3-subtitle mb-0">Identifica los insumos que requieren reposición.</p></div>
+        <a class="btn p3-btn-primary" href="/admin/inventario/movimientos">+ Ir a registrar entrada</a>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="p3-stat p3-stat-warning"><span>Alertas activas</span><strong>4</strong><small>En el nivel mínimo o debajo</small></div></div>
+        <div class="col-md-4"><div class="p3-stat"><span>Stock por debajo del mínimo</span><strong>3</strong><small>Prioridad de reposición</small></div></div>
+        <div class="col-md-4"><div class="p3-stat"><span>Stock en el mínimo</span><strong>1</strong><small>Atención preventiva</small></div></div>
+    </div>
+
+    <div class="p3-critical mb-4 d-flex gap-3 align-items-start"><span class="p3-critical-icon" aria-hidden="true">!</span><div><h2 class="h6 fw-bold mb-1">Atención: insumos por reponer</h2><p class="mb-0 small">Plátano bellaco, hoja de bijao y tomates están por debajo del mínimo. El aceite vegetal llegó al valor mínimo.</p></div></div>
+
+    <section class="p3-card p-0 overflow-hidden mb-4">
+        <div class="p3-table-title"><h2 class="h6 mb-0">Detalle de alertas</h2></div>
+        <div class="table-responsive"><table class="table table-hover align-middle mb-0 p3-table">
+            <thead><tr><th>Insumo</th><th>Stock actual</th><th>Stock mínimo</th><th>Unidad</th><th>Estado</th><th class="text-end">Acción</th></tr></thead>
+            <tbody>
+                <tr><td class="fw-semibold">Plátano bellaco</td><td>14</td><td>20</td><td>unidades</td><td><span class="p3-tag p3-tag-danger">Bajo mínimo</span></td><td class="text-end"><a class="btn btn-sm p3-btn-edit" href="/admin/inventario/movimientos">Ver movimientos</a></td></tr>
+                <tr><td class="fw-semibold">Hoja de bijao</td><td>8</td><td>15</td><td>unidades</td><td><span class="p3-tag p3-tag-danger">Bajo mínimo</span></td><td class="text-end"><a class="btn btn-sm p3-btn-edit" href="/admin/inventario/movimientos">Ver movimientos</a></td></tr>
+                <tr><td class="fw-semibold">Tomates</td><td>2.00</td><td>4.00</td><td>kg</td><td><span class="p3-tag p3-tag-danger">Bajo mínimo</span></td><td class="text-end"><a class="btn btn-sm p3-btn-edit" href="/admin/inventario/movimientos">Ver movimientos</a></td></tr>
+                <tr><td class="fw-semibold">Aceite vegetal</td><td>3.00</td><td>3.00</td><td>L</td><td><span class="p3-tag p3-tag-gold">En mínimo</span></td><td class="text-end"><a class="btn btn-sm p3-btn-edit" href="/admin/inventario/movimientos">Ver movimientos</a></td></tr>
+            </tbody>
+        </table></div>
+    </section>
+
+    <div class="d-flex flex-wrap gap-2 mt-4"><a class="btn p3-btn-outline" href="/admin/insumos">← Ver todos los insumos</a><a class="btn p3-btn-outline" href="/admin/inventario/movimientos">Movimientos de inventario →</a></div>
+</div>

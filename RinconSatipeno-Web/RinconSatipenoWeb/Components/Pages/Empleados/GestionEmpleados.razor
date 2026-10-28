@@ -1,0 +1,127 @@
+@page "/admin/empleados"
+@layout AdminLayout
+
+<PageTitle>Gestión de empleados | El Rincón Satipeño</PageTitle>
+
+<nav class="p4-breadcrumb" aria-label="Ubicación">Administración / Empleados</nav>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div><span class="p4-eyebrow">PERSONAL DEL RESTAURANTE</span><h1 class="p4-heading">Gestión de empleados</h1><p class="p4-intro">Administra la información y los accesos del personal.</p></div>
+    <button type="button" class="btn p4-btn-primary" data-bs-toggle="modal" data-bs-target="#p4ModalNuevo">+ Registrar empleado</button>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4"><div class="p4-stat green"><span class="p4-stat-icon">♙</span><span class="p4-stat-label">Total de empleados</span><strong class="p4-stat-number">@empleados.Count</strong><span class="p4-stat-note">Personal registrado</span></div></div>
+    <div class="col-sm-6 col-xl-4"><div class="p4-stat"><span class="p4-stat-icon">✓</span><span class="p4-stat-label">Empleados activos</span><strong class="p4-stat-number">@empleados.Count(e => e.Estado == "Activo")</strong><span class="p4-stat-note">Cuentas activas</span></div></div>
+    <div class="col-sm-6 col-xl-4"><div class="p4-stat gold"><span class="p4-stat-icon">♧</span><span class="p4-stat-label">Mozos</span><strong class="p4-stat-number">@empleados.Count(e => e.Rol == "Mozo")</strong><span class="p4-stat-note">Personal de atención</span></div></div>
+</div>
+
+<section class="p4-panel mb-3" aria-label="Filtros de empleados">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-4"><label for="p4BuscarEmpleado" class="form-label">Buscar empleado</label><input id="p4BuscarEmpleado" class="form-control" placeholder="Nombre, usuario o DNI" @bind="busqueda" @bind:event="oninput" /></div>
+        <div class="col-sm-6 col-lg-2"><label for="p4Rol" class="form-label">Rol</label><select id="p4Rol" class="form-select" @bind="rol"><option value="">Todos los roles</option><option>Administrador</option><option>Mozo</option><option>Empleado</option></select></div>
+        <div class="col-sm-6 col-lg-2"><label for="p4Estado" class="form-label">Estado</label><select id="p4Estado" class="form-select" @bind="estado"><option value="">Todos</option><option>Activo</option><option>Inactivo</option></select></div>
+        <div class="col-sm-6 col-lg-2"><button type="button" class="btn p4-btn-primary w-100" @onclick="Buscar">Buscar</button></div>
+        <div class="col-sm-6 col-lg-2"><button type="button" class="btn p4-btn-outline w-100" @onclick="Limpiar">Limpiar</button></div>
+    </div>
+</section>
+
+<section class="p4-table-container" aria-labelledby="p4ListaEmpleados">
+    <div class="d-flex justify-content-between align-items-center p-3 gap-2 flex-wrap"><h2 id="p4ListaEmpleados" class="h6 mb-0" style="color:#264D3B">Listado de empleados</h2><small class="text-secondary">@Filtrados.Count() de @empleados.Count empleados</small></div>
+    <div class="table-responsive"><table class="table table-hover p4-table">
+        <thead><tr><th>Empleado</th><th>Usuario</th><th>DNI</th><th>Cargo</th><th>Rol</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+        <tbody>
+            @foreach (var emp in Filtrados)
+            {
+                <tr>
+                    <td><strong>@emp.Nombre</strong><div class="small text-secondary">@emp.Correo</div></td>
+                    <td>@emp.Usuario</td><td>@emp.Dni</td><td>@emp.Cargo</td>
+                    <td><span class="p4-badge @(emp.Rol == "Administrador" ? "p4-badge-teal" : "p4-badge-gold")">@emp.Rol</span></td>
+                    <td><span class="p4-badge @(emp.Estado == "Activo" ? "p4-badge-green" : "p4-badge-coral")">@emp.Estado</span></td>
+                    <td class="text-end text-nowrap">
+                        <button type="button" class="btn btn-sm p4-btn-edit me-1" @onclick="() => Seleccionar(emp)" data-bs-toggle="modal" data-bs-target="#p4ModalEditar">Editar</button>
+                        <button type="button" class="btn btn-sm p4-btn-remove" @onclick="() => Seleccionar(emp)" data-bs-toggle="modal" data-bs-target="#p4ModalEliminar">Eliminar</button>
+                    </td>
+                </tr>
+            }
+            @if (!Filtrados.Any())
+            {
+                <tr><td colspan="7" class="text-center text-secondary py-4">No se encontraron empleados con los filtros seleccionados.</td></tr>
+            }
+        </tbody>
+    </table></div>
+</section>
+
+<div class="modal fade" id="p4ModalNuevo" tabindex="-1" aria-labelledby="p4ModalNuevoTitulo" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p4-modal">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="p4ModalNuevoTitulo">Registrar empleado</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-12"><label class="form-label" for="p4NuevoNombre">Nombres y apellidos</label><input id="p4NuevoNombre" class="form-control" placeholder="Nombre completo" /></div>
+            <div class="col-md-6"><label class="form-label" for="p4NuevoDni">DNI</label><input id="p4NuevoDni" class="form-control" maxlength="8" placeholder="8 dígitos" /></div>
+            <div class="col-md-6"><label class="form-label" for="p4NuevoUsuario">Usuario</label><input id="p4NuevoUsuario" class="form-control" placeholder="Nombre de usuario" /></div>
+            <div class="col-12"><label class="form-label" for="p4NuevoCorreo">Correo electrónico</label><input id="p4NuevoCorreo" type="email" class="form-control" placeholder="empleado@rinconsatipeno.pe" /></div>
+            <div class="col-md-6"><label class="form-label" for="p4NuevoCargo">Cargo</label><select id="p4NuevoCargo" class="form-select"><option>Mozo</option><option>Administrador</option><option>Cocinero</option><option>Cajero</option><option>Almacenero</option></select></div>
+            <div class="col-md-6"><label class="form-label" for="p4NuevoRol">Rol de acceso</label><select id="p4NuevoRol" class="form-select"><option>Mozo</option><option>Administrador</option><option>Empleado</option></select></div>
+            <div class="col-12"><label class="form-label" for="p4NuevoClave">Contraseña</label><input id="p4NuevoClave" type="password" class="form-control" placeholder="Contraseña" autocomplete="new-password" /></div>
+        </div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p4-btn-primary" data-bs-dismiss="modal">Guardar</button></div>
+</div></div></div>
+
+<div class="modal fade" id="p4ModalEditar" tabindex="-1" aria-labelledby="p4ModalEditarTitulo" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p4-modal">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="p4ModalEditarTitulo">Editar empleado</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label for="p4EditarNombre" class="form-label">Nombre completo</label><input id="p4EditarNombre" class="form-control" value="@seleccionado?.Nombre" /></div>
+        <div class="row g-3"><div class="col-md-6"><label for="p4EditarUsuario" class="form-label">Usuario</label><input id="p4EditarUsuario" class="form-control" value="@seleccionado?.Usuario" /></div><div class="col-md-6"><label for="p4EditarRol" class="form-label">Rol</label><select id="p4EditarRol" class="form-select"><option>Administrador</option><option>Mozo</option><option>Empleado</option></select></div></div>
+        <div class="mt-3"><label for="p4EditarCorreo" class="form-label">Correo</label><input id="p4EditarCorreo" class="form-control" value="@seleccionado?.Correo" /></div>
+        <div class="mt-3"><label for="p4EditarEstado" class="form-label">Estado</label><select id="p4EditarEstado" class="form-select"><option>Activo</option><option>Inactivo</option></select></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p4-btn-primary" data-bs-dismiss="modal">Guardar cambios</button></div>
+</div></div></div>
+
+<div class="modal fade" id="p4ModalEliminar" tabindex="-1" aria-labelledby="p4ModalEliminarTitulo" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p4-modal">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="p4ModalEliminarTitulo">Eliminar empleado</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body"><p>¿Deseas eliminar a <strong>@seleccionado?.Nombre</strong>?</p></div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p4-btn-remove" data-bs-dismiss="modal">Eliminar</button></div>
+</div></div></div>
+
+@code {
+    private string busqueda = "";
+    private string rol = "";
+    private string estado = "";
+    private string busquedaAplicada = "";
+    private string rolAplicado = "";
+    private string estadoAplicado = "";
+    private EmpleadoVista? seleccionado;
+
+    private readonly List<EmpleadoVista> empleados = new()
+    {
+        new("María Torres Rojas", "mtorres", "70824516", "Administrador", "Administrador", "Activo", "maria.torres@rinconsatipeno.pe"),
+        new("Jorge Huamán López", "jhuaman", "72639185", "Mozo", "Mozo", "Activo", "jorge.huaman@rinconsatipeno.pe"),
+        new("Rosa Salazar Pinedo", "rsalazar", "75204893", "Cocinero", "Empleado", "Activo", "rosa.salazar@rinconsatipeno.pe"),
+        new("Luis Paredes Díaz", "lparedes", "70481629", "Cajero", "Empleado", "Activo", "luis.paredes@rinconsatipeno.pe"),
+        new("Elena Ríos Cabrera", "erios", "73852047", "Almacenero", "Empleado", "Activo", "elena.rios@rinconsatipeno.pe"),
+        new("Carlos Medina Ruiz", "cmedina", "74169280", "Mozo", "Mozo", "Inactivo", "carlos.medina@rinconsatipeno.pe")
+    };
+
+    private IEnumerable<EmpleadoVista> Filtrados => empleados.Where(e =>
+        (string.IsNullOrWhiteSpace(busquedaAplicada) || e.Nombre.Contains(busquedaAplicada, StringComparison.OrdinalIgnoreCase) || e.Usuario.Contains(busquedaAplicada, StringComparison.OrdinalIgnoreCase) || e.Dni.Contains(busquedaAplicada)) &&
+        (string.IsNullOrEmpty(rolAplicado) || e.Rol == rolAplicado) &&
+        (string.IsNullOrEmpty(estadoAplicado) || e.Estado == estadoAplicado));
+
+    private void Buscar()
+    {
+        busquedaAplicada = busqueda.Trim();
+        rolAplicado = rol;
+        estadoAplicado = estado;
+    }
+
+    private void Seleccionar(EmpleadoVista empleado) => seleccionado = empleado;
+    private void Limpiar()
+    {
+        busqueda = "";
+        rol = "";
+        estado = "";
+        Buscar();
+    }
+    private record EmpleadoVista(string Nombre, string Usuario, string Dni, string Cargo, string Rol, string Estado, string Correo);
+}

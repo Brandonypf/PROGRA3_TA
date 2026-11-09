@@ -1,0 +1,69 @@
+@page "/empleados/login"
+@layout AccesoLayout
+@inject RinconSatipenoWeb.Servicios.Rest.AtencionApiService Api
+@inject RinconSatipenoWeb.Servicios.Rest.SesionEmpleadoService Sesion
+@inject NavigationManager Navegacion
+
+<PageTitle>Ingreso de empleados | El Rincón Satipeño</PageTitle>
+
+<section class="p4-login-card" aria-labelledby="p4LoginTitulo">
+    <div class="p4-login-aside">
+        <div>
+            <span class="p4-login-kicker">✦ GESTIÓN DEL RESTAURANTE</span>
+            <h2 class="mt-4 mb-3">Bienvenido a nuestro equipo.</h2>
+            <p>Ingresa con tu cuenta de empleado para acceder a las herramientas de tu puesto.</p>
+        </div>
+        <div class="p4-login-aside-bottom">El Rincón Satipeño · Plataforma interna</div>
+    </div>
+    <div class="p4-login-form">
+        <span class="p4-eyebrow">ACCESO DE PERSONAL</span>
+        <h1 id="p4LoginTitulo" class="mt-2 mb-2">Iniciar sesión</h1>
+        <p class="mb-4">Utiliza el correo y la contraseña registrados.</p>
+        <EditForm Model="modelo" OnValidSubmit="Ingresar">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label for="p4Usuario" class="form-label">Correo electrónico</label>
+                <InputText id="p4Usuario" class="form-control" type="email" placeholder="correo@ejemplo.com" autocomplete="username" @bind-Value="modelo.Correo" />
+                <ValidationMessage For="@(() => modelo.Correo)" />
+            </div>
+            <div class="mb-3">
+                <label for="p4Clave" class="form-label">Contraseña</label>
+                <InputText id="p4Clave" class="form-control" type="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" @bind-Value="modelo.Contrasenia" />
+                <ValidationMessage For="@(() => modelo.Contrasenia)" />
+            </div>
+            @if (!string.IsNullOrWhiteSpace(aviso))
+            {
+                <div class="alert alert-danger small" role="alert">@aviso</div>
+            }
+            <button type="submit" class="btn p4-btn-primary w-100 py-3" disabled="@procesando">
+                @(procesando ? "Ingresando..." : "Iniciar sesión")
+            </button>
+        </EditForm>
+    </div>
+</section>
+
+@code {
+    private RinconSatipenoWeb.ViewModels.LoginViewModel modelo = new();
+    private string aviso = "";
+    private bool procesando;
+
+    private async Task Ingresar()
+    {
+        aviso = "";
+        procesando = true;
+        try
+        {
+            var sesion = await Api.IniciarSesionAsync(modelo.Correo, modelo.Contrasenia);
+            Sesion.Iniciar(sesion);
+            Navegacion.NavigateTo(sesion.Rol == "Mozo" ? "/atencion/mozo" : "/admin/mesas/estado");
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+}

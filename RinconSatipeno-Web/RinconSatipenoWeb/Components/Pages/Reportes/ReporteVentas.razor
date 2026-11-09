@@ -1,0 +1,115 @@
+@page "/admin/reportes/ventas"
+@layout AdminLayout
+
+<PageTitle>Reporte de ventas | El Rincón Satipeño</PageTitle>
+
+<nav class="p4-breadcrumb" aria-label="Ubicación">Administración / Reportes / Ventas</nav>
+<div class="mb-4">
+    <span class="p4-eyebrow">RESUMEN COMERCIAL</span>
+    <h1 class="p4-heading">Reporte de ventas</h1>
+    <p class="p4-intro">Consulta los ingresos y las operaciones del restaurante por periodo.</p>
+</div>
+
+<section class="p4-panel mb-4" aria-label="Filtros del reporte">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4"><label class="form-label" for="p4VentasDesde">Desde</label><input id="p4VentasDesde" type="date" class="form-control" @bind="desde" /></div>
+        <div class="col-md-4"><label class="form-label" for="p4VentasHasta">Hasta</label><input id="p4VentasHasta" type="date" class="form-control" @bind="hasta" /></div>
+        <div class="col-md-4"><button class="btn p4-btn-primary w-100" type="button" @onclick="Consultar">Consultar</button></div>
+    </div>
+    @if (!string.IsNullOrEmpty(error)) { <div class="alert alert-warning mt-3 mb-0" role="alert">@error</div> }
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3"><div class="p4-stat green"><span class="p4-stat-label">Ventas del periodo</span><strong class="p4-stat-number">@Soles(Total)</strong><span class="p4-stat-note">Ingresos acumulados</span></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="p4-stat gold"><span class="p4-stat-label">Órdenes atendidas</span><strong class="p4-stat-number">@Ordenes</strong><span class="p4-stat-note">Operaciones del periodo</span></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="p4-stat"><span class="p4-stat-label">Ticket promedio</span><strong class="p4-stat-number">@Soles(Ordenes == 0 ? 0 : Total / Ordenes)</strong><span class="p4-stat-note">Promedio por orden</span></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="p4-stat coral"><span class="p4-stat-label">Día con más ventas</span><strong class="p4-stat-number p4-stat-number-sm">@(DiasFiltrados.Count == 0 ? "—" : DiasFiltrados.OrderByDescending(d => d.Total).First().Fecha.ToString("dd/MM"))</strong><span class="p4-stat-note">@Soles(DiasFiltrados.Count == 0 ? 0 : DiasFiltrados.Max(d => d.Total))</span></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-7"><section class="p4-panel h-100">
+        <h2 class="p4-panel-title mb-2">Ventas por día</h2>
+        @if (DiasFiltrados.Count > 0)
+        {
+            <div class="p4-chart" role="img" aria-label="Gráfico de ventas diarias">
+                @foreach (var dia in DiasFiltrados)
+                {
+                    <div class="p4-chart-col">
+                        <span class="p4-chart-number">@dia.Total.ToString("N0")</span>
+                        <div class="p4-chart-bar" style="@($"--bar-height:{Altura(dia)}%")"></div>
+                        <small>@dia.Fecha.ToString("dd/MM")</small>
+                    </div>
+                }
+            </div>
+        }
+        else { <p class="text-secondary mt-3 mb-0">No hay ventas registradas para el periodo seleccionado.</p> }
+    </section></div>
+    <div class="col-xl-5"><section class="p4-panel h-100">
+        <h2 class="p4-panel-title">Ventas por forma de pago</h2>
+        <p class="p4-muted-note mb-4">Distribución de los ingresos del periodo.</p>
+        @foreach (var medio in MediosPago)
+        {
+            <div class="d-flex justify-content-between mb-2"><span class="small fw-semibold">@medio.Nombre</span><span class="small">@Soles(medio.Monto) · @Porcentaje(medio.Monto)%</span></div>
+            <div class="p4-progress-track mb-4"><div class="p4-progress-fill @medio.Clase" style="@($"--bar-width:{Porcentaje(medio.Monto)}%")"></div></div>
+        }
+    </section></div>
+</div>
+
+<section class="p4-table-container" aria-labelledby="p4TablaVentasTitulo">
+    <div class="p-3"><h2 class="h6 mb-0" id="p4TablaVentasTitulo" style="color:#264D3B">Detalle diario de ventas</h2></div>
+    <div class="table-responsive"><table class="table table-hover p4-table">
+        <thead><tr><th>Fecha</th><th>Órdenes</th><th>Efectivo</th><th>Tarjeta</th><th>Yape / Plin</th><th>Total</th></tr></thead>
+        <tbody>
+            @foreach (var dia in DiasFiltrados)
+            {
+                <tr><td>@dia.Fecha.ToString("dd/MM/yyyy")</td><td>@dia.Ordenes</td><td>@Soles(dia.Efectivo)</td><td>@Soles(dia.Tarjeta)</td><td>@Soles(dia.Digital)</td><td><strong>@Soles(dia.Total)</strong></td></tr>
+            }
+            @if (DiasFiltrados.Count == 0) { <tr><td colspan="6" class="text-center text-secondary py-4">Sin registros para estas fechas.</td></tr> }
+        </tbody>
+    </table></div>
+</section>
+
+@code {
+    private DateTime desde = new(2026, 10, 12);
+    private DateTime hasta = new(2026, 10, 18);
+    private DateOnly inicio = new(2026, 10, 12);
+    private DateOnly fin = new(2026, 10, 18);
+    private string error = "";
+
+    private readonly List<VentaDia> dias = new()
+    {
+        new(new(2026, 10, 12), 9, 400, 320, 200),
+        new(new(2026, 10, 13), 12, 560, 440, 250),
+        new(new(2026, 10, 14), 11, 510, 390, 230),
+        new(new(2026, 10, 15), 15, 710, 540, 300),
+        new(new(2026, 10, 16), 14, 600, 470, 270),
+        new(new(2026, 10, 17), 18, 810, 620, 360),
+        new(new(2026, 10, 18), 17, 730, 580, 310)
+    };
+
+    private List<VentaDia> DiasFiltrados => dias.Where(d => d.Fecha >= inicio && d.Fecha <= fin).ToList();
+    private decimal Total => DiasFiltrados.Sum(d => d.Total);
+    private int Ordenes => DiasFiltrados.Sum(d => d.Ordenes);
+    private List<MedioPago> MediosPago => new()
+    {
+        new("Efectivo", DiasFiltrados.Sum(d => d.Efectivo), "green"),
+        new("Tarjeta", DiasFiltrados.Sum(d => d.Tarjeta), ""),
+        new("Yape / Plin", DiasFiltrados.Sum(d => d.Digital), "gold")
+    };
+
+    private void Consultar()
+    {
+        if (desde.Date > hasta.Date)
+        { error = "Selecciona un rango de fechas válido."; return; }
+        inicio = DateOnly.FromDateTime(desde);
+        fin = DateOnly.FromDateTime(hasta);
+        error = "";
+    }
+
+    private decimal Altura(VentaDia dia) => DiasFiltrados.Max(d => d.Total) == 0 ? 0 : Math.Round(dia.Total * 88 / DiasFiltrados.Max(d => d.Total));
+    private decimal Porcentaje(decimal monto) => Total == 0 ? 0 : Math.Round(monto * 100 / Total);
+    private static string Soles(decimal monto) => $"S/ {monto:N2}";
+    private record VentaDia(DateOnly Fecha, int Ordenes, decimal Efectivo, decimal Tarjeta, decimal Digital)
+    { public decimal Total => Efectivo + Tarjeta + Digital; }
+    private record MedioPago(string Nombre, decimal Monto, string Clase);
+}

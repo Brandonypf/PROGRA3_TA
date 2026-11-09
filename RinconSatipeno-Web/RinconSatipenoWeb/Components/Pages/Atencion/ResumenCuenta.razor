@@ -1,0 +1,160 @@
+@page "/atencion/cuenta/{Id:int}"
+@layout MozoLayout
+@using RinconSatipenoWeb.Models.Atencion
+@using RinconSatipenoWeb.ViewModels
+@inject AtencionApiService Api
+@inject NavigationManager Navegacion
+
+<PageTitle>Resumen de cuenta | El Rincón Satipeño</PageTitle>
+
+@if (cargando)
+{
+    <p class="text-secondary">Cargando resumen de cuenta...</p>
+}
+else if (cuenta is null)
+{
+    <div class="rs-atn-card p-4">
+        <h1>Cuenta no disponible</h1>
+        <p>No se encontró una cuenta abierta para esta mesa.</p>
+        <a class="btn rs-btn-primary" href="@($"/atencion/mesa/{Id}")">Volver a la atención</a>
+    </div>
+}
+else
+{
+    <div class="rs-atn-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="rs-atn-overline">ATENCIÓN · CAJA</div>
+            <h1>Resumen de cuenta</h1>
+            <p class="text-secondary mb-0">Mesa @cuenta.Mesa.ToString("00") · @ZonaTexto(cuenta.Zona)</p>
+        </div>
+        <a class="btn rs-btn-outline" href="@($"/atencion/mesa/{Id}")">← Volver a la atención</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(aviso))
+    {
+        <div class="alert alert-danger" role="alert">@aviso</div>
+    }
+
+    <section class="rs-atn-card p-3 p-md-4">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <h2 class="h5 mb-3">Detalle del consumo</h2>
+                <div class="table-responsive">
+                    <table class="table rs-atn-table align-middle mb-0">
+                        <thead><tr><th>Descripción</th><th class="text-center">Cantidad</th><th class="text-end">Precio</th><th class="text-end">Importe</th></tr></thead>
+                        <tbody>
+                            @foreach (var detalle in cuenta.Detalles)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@detalle.Nombre</td>
+                                    <td class="text-center">@detalle.Cantidad</td>
+                                    <td class="text-end">S/ @detalle.PrecioUnitario.ToString("0.00")</td>
+                                    <td class="text-end">S/ @detalle.Importe.ToString("0.00")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <h2 class="h5 mb-3">Comprobante y pago</h2>
+                <div class="rs-atn-price-line"><span>Valor de venta</span><strong>S/ @cuenta.Subtotal.ToString("0.00")</strong></div>
+                <div class="rs-atn-price-line"><span>IGV (18 %)</span><strong>S/ @cuenta.Igv.ToString("0.00")</strong></div>
+                <hr />
+                <div class="rs-atn-price-line rs-atn-grand-total mb-4"><span>Total a pagar</span><strong>S/ @cuenta.Total.ToString("0.00")</strong></div>
+
+                @if (cuenta.Estado == "PAGADA")
+                {
+                    <div class="alert alert-success">Esta cuenta ya fue pagada y cerrada.</div>
+                }
+                else
+                {
+                <EditForm Model="pago" OnValidSubmit="GenerarCodigoQR">
+                    <DataAnnotationsValidator />
+                    <div class="mb-3">
+                        <label class="form-label" for="comprobante">Tipo de comprobante</label>
+                        <InputSelect id="comprobante" class="form-select" @bind-Value="pago.TipoComprobante">
+                            <option value="Boleta">Boleta de venta</option>
+                            <option value="Factura">Factura</option>
+                        </InputSelect>
+                    </div>
+                    @if (pago.TipoComprobante == "Factura")
+                    {
+                        <div class="mb-3">
+                            <label class="form-label" for="ruc">RUC</label>
+                            <InputText id="ruc" class="form-control" maxlength="11" inputmode="numeric" @bind-Value="pago.Ruc" />
+                            <ValidationMessage For="@(() => pago.Ruc)" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="razonSocial">Razón social</label>
+                            <InputText id="razonSocial" class="form-control" @bind-Value="pago.RazonSocial" />
+                            <ValidationMessage For="@(() => pago.RazonSocial)" />
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label" for="medio">Medio de pago</label>
+                        <InputSelect id="medio" class="form-select" @bind-Value="pago.MedioPago">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Yape">Yape</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                        </InputSelect>
+                    </div>
+                    <button type="submit" class="btn rs-btn-primary w-100 py-3" disabled="@procesando">
+                        @(procesando ? "Generando QR..." : "Registrar pago y generar QR →")
+                    </button>
+                </EditForm>
+                <p class="small text-secondary mt-3 mb-0">El pago es simulado. El mozo verificará el comprobante antes de cerrar la cuenta.</p>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private CuentaConsumoDTO? cuenta;
+    private PagoViewModel pago = new();
+    private string aviso = "";
+    private bool cargando = true;
+    private bool procesando;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        cargando = true;
+        try
+        {
+            cuenta = await Api.ObtenerCuentaAsync(Id);
+            if (cuenta.Estado == "PENDIENTE")
+                Navegacion.NavigateTo($"/atencion/pago/{Id}?token={Uri.EscapeDataString(cuenta.Referencia ?? "")}");
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task GenerarCodigoQR()
+    {
+        aviso = "";
+        procesando = true;
+        try
+        {
+            var comprobante = await Api.GenerarPagoAsync(Id, pago.MedioPago, pago.TipoComprobante, pago.Ruc, pago.RazonSocial);
+            Navegacion.NavigateTo($"/atencion/pago/{Id}?token={Uri.EscapeDataString(comprobante.Token)}");
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private static string ZonaTexto(string zona) => zona == "SALON_PRINCIPAL" ? "Salón principal" : "Terraza";
+}

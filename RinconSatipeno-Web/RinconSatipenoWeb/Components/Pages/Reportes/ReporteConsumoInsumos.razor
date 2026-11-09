@@ -1,0 +1,102 @@
+@page "/admin/reportes/consumo-insumos"
+@layout AdminLayout
+
+<PageTitle>Reporte de consumo de insumos | El Rincón Satipeño</PageTitle>
+
+<nav class="p4-breadcrumb" aria-label="Ubicación">Administración / Reportes / Consumo de insumos</nav>
+<div class="mb-4">
+    <span class="p4-eyebrow">CONTROL DE ALMACÉN</span>
+    <h1 class="p4-heading">Reporte de consumo de insumos</h1>
+    <p class="p4-intro">Consulta las cantidades utilizadas por periodo y su avance frente al plan semanal.</p>
+</div>
+
+<section class="p4-panel mb-4" aria-label="Filtros de consumo">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4"><label class="form-label" for="p4ConsumoDesde">Desde</label><input id="p4ConsumoDesde" type="date" class="form-control" @bind="desde" /></div>
+        <div class="col-md-4"><label class="form-label" for="p4ConsumoHasta">Hasta</label><input id="p4ConsumoHasta" type="date" class="form-control" @bind="hasta" /></div>
+        <div class="col-md-4"><button class="btn p4-btn-primary w-100" type="button" @onclick="Consultar">Consultar</button></div>
+    </div>
+    @if (!string.IsNullOrEmpty(error)) { <div class="alert alert-warning mt-3 mb-0" role="alert">@error</div> }
+</section>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4"><div class="p4-stat green"><span class="p4-stat-label">Insumos consumidos</span><strong class="p4-stat-number">@Resultados.Count(i => i.Consumido > 0)</strong><span class="p4-stat-note">Con movimientos en el periodo</span></div></div>
+    <div class="col-sm-6 col-xl-4"><div class="p4-stat gold"><span class="p4-stat-label">Mayor avance del plan</span><strong class="p4-stat-number">@MayorAvance%</strong><span class="p4-stat-note">@NombreMayorAvance</span></div></div>
+    <div class="col-sm-6 col-xl-4"><div class="p4-stat"><span class="p4-stat-label">Días consultados</span><strong class="p4-stat-number">@((fin.DayNumber - inicio.DayNumber) + 1)</strong><span class="p4-stat-note">@inicio.ToString("dd/MM/yyyy") al @fin.ToString("dd/MM/yyyy")</span></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-xl-7"><section class="p4-panel h-100">
+        <h2 class="p4-panel-title mb-2">Consumo frente al plan semanal</h2>
+        <p class="p4-muted-note mb-4">Porcentaje consumido del plan de referencia.</p>
+        @foreach (var item in Resultados)
+        {
+            <div class="mb-4">
+                <div class="d-flex justify-content-between small mb-2"><span class="fw-semibold">@item.Nombre</span><span>@item.Consumido.ToString("0.#") de @item.Plan.ToString("0.#") @item.Unidad · @item.Porcentaje%</span></div>
+                <div class="p4-progress-track"><div class="p4-progress-fill @(item.Porcentaje >= 80 ? "gold" : "green")" style="@($"--bar-width:{item.Porcentaje}%")"></div></div>
+            </div>
+        }
+    </section></div>
+    <div class="col-xl-5"><section class="p4-panel h-100">
+        <h2 class="p4-panel-title">Resumen del consumo</h2>
+        @if (Resultados.Any(i => i.Consumido > 0))
+        {
+            <div class="p4-report-highlight mb-3"><strong>Mayor avance:</strong> @NombreMayorAvance (@MayorAvance% del plan).</div>
+            <p class="small text-secondary">Puedes consultar el inventario para revisar las existencias disponibles.</p>
+        }
+        else { <p class="small text-secondary">No hay consumo registrado para estas fechas.</p> }
+        <a href="/admin/inventario/alertas" class="btn p4-btn-outline w-100">Ver alertas de stock →</a>
+    </section></div>
+</div>
+
+<section class="p4-table-container" aria-labelledby="p4ConsumoTablaTitulo">
+    <div class="p-3"><h2 class="h6 mb-0" id="p4ConsumoTablaTitulo" style="color:#264D3B">Detalle por insumo</h2></div>
+    <div class="table-responsive"><table class="table table-hover p4-table">
+        <thead><tr><th>Insumo</th><th>Unidad</th><th>Plan semanal</th><th>Consumido en el periodo</th><th>Pendiente del plan</th><th>Avance</th></tr></thead>
+        <tbody>
+            @foreach (var item in Resultados)
+            {
+                <tr><td><strong>@item.Nombre</strong></td><td>@item.Unidad</td><td>@item.Plan.ToString("0.#")</td><td>@item.Consumido.ToString("0.#")</td><td>@(Math.Max(0, item.Plan - item.Consumido).ToString("0.#"))</td><td><span class="p4-badge @(item.Porcentaje >= 80 ? "p4-badge-gold" : "p4-badge-green")">@item.Porcentaje%</span></td></tr>
+            }
+        </tbody>
+    </table></div>
+</section>
+
+@code {
+    private DateTime desde = new(2026, 10, 12);
+    private DateTime hasta = new(2026, 10, 18);
+    private DateOnly inicio = new(2026, 10, 12);
+    private DateOnly fin = new(2026, 10, 18);
+    private string error = "";
+
+    private readonly List<InsumoConsumo> insumos = new()
+    {
+        new("Hojas de bijao", "und.", 90, 75),
+        new("Arroz", "kg", 60, 48),
+        new("Aceite vegetal", "L", 20, 16),
+        new("Plátano bellaco", "und.", 120, 90),
+        new("Cecina", "kg", 25, 18)
+    };
+    // Distribución diaria de consumo para la semana registrada (suma = 100%).
+    private readonly int[] pesos = { 12, 14, 13, 15, 16, 17, 13 };
+    private decimal FraccionPeriodo => Enumerable.Range(0, 7)
+        .Where(i => new DateOnly(2026, 10, 12).AddDays(i) >= inicio && new DateOnly(2026, 10, 12).AddDays(i) <= fin)
+        .Sum(i => pesos[i]) / 100m;
+    private List<ConsumoVista> Resultados => insumos.Select(i =>
+        new ConsumoVista(i.Nombre, i.Unidad, i.Plan, Math.Round(i.ConsumidoSemanal * FraccionPeriodo, 1))).ToList();
+    private int MayorAvance => Resultados.Count == 0 ? 0 : Resultados.Max(i => i.Porcentaje);
+    private string NombreMayorAvance => Resultados.FirstOrDefault(i => i.Porcentaje == MayorAvance && i.Consumido > 0)?.Nombre ?? "Sin registros";
+
+    private void Consultar()
+    {
+        if (desde.Date > hasta.Date)
+        { error = "Selecciona un rango de fechas válido."; return; }
+        inicio = DateOnly.FromDateTime(desde);
+        fin = DateOnly.FromDateTime(hasta);
+        error = "";
+    }
+
+    private record InsumoConsumo(string Nombre, string Unidad, decimal Plan, decimal ConsumidoSemanal);
+    private record ConsumoVista(string Nombre, string Unidad, decimal Plan, decimal Consumido)
+    { public int Porcentaje => Plan == 0 ? 0 : (int)Math.Round(100 * Consumido / Plan); }
+}

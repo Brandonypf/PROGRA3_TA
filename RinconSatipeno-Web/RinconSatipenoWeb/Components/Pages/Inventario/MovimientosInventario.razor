@@ -1,0 +1,104 @@
+@page "/admin/inventario/movimientos"
+
+<PageTitle>Movimientos de inventario | El Rincón Satipeño</PageTitle>
+<HeadContent><link rel="stylesheet" href="/css/p3.css" /></HeadContent>
+
+<div class="p3-page container-fluid py-4 px-3 px-lg-4">
+    <nav aria-label="Ubicación" class="small mb-2"><a href="/">Inicio</a> / Administración / Movimientos</nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><h1 class="p3-title mb-1">Movimientos de inventario</h1><p class="p3-subtitle mb-0">Historial de entradas y salidas de los insumos del restaurante.</p></div>
+        <button type="button" class="btn p3-btn-primary" data-bs-toggle="modal" data-bs-target="#p3NuevoMovimiento">+ Registrar movimiento</button>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="p3-stat"><span>Movimientos registrados</span><strong>@movimientos.Count</strong><small>Historial</small></div></div>
+        <div class="col-md-4"><div class="p3-stat"><span>Entradas</span><strong>@(movimientos.Count(m => m.Tipo == "Entrada"))</strong><small>Reposición de stock</small></div></div>
+        <div class="col-md-4"><div class="p3-stat"><span>Salidas</span><strong>@(movimientos.Count(m => m.Tipo == "Salida"))</strong><small>Mermas y otros motivos</small></div></div>
+    </div>
+    <section class="p3-card mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4"><label for="p3FiltroFecha" class="form-label">Fecha</label><input id="p3FiltroFecha" type="date" class="form-control" value="@fecha" @onchange="ActualizarFecha" /></div>
+            <div class="col-md-4"><label for="p3FiltroTipo" class="form-label">Tipo</label><select id="p3FiltroTipo" class="form-select" @bind="tipo"><option value="">Todos los movimientos</option><option value="Entrada">Entrada</option><option value="Salida">Salida</option></select></div>
+            <div class="col-md-4"><label for="p3FiltroInsumo" class="form-label">Insumo</label><select id="p3FiltroInsumo" class="form-select" @bind="insumo"><option value="">Todos los insumos</option>@foreach (var nombre in movimientos.Select(m => m.Insumo).Distinct()) { <option value="@nombre">@nombre</option> }</select></div>
+            <div class="col-12 d-flex gap-2"><button type="button" class="btn p3-btn-outline" @onclick="AplicarFiltros">Aplicar filtros</button><button type="button" class="btn btn-light border" @onclick="LimpiarFiltros">Limpiar filtros</button></div>
+        </div>
+    </section>
+    <section class="p3-card p-0 overflow-hidden">
+        <div class="p3-table-title d-flex justify-content-between align-items-center gap-2"><h2 class="h6 mb-0">Historial de movimientos</h2><span class="text-secondary small">@MovimientosFiltrados.Count de @movimientos.Count movimientos</span></div>
+        <div class="table-responsive"><table class="table table-hover align-middle mb-0 p3-table">
+            <thead><tr><th>ID</th><th>Fecha</th><th>Insumo</th><th>Tipo</th><th>Cantidad</th><th>Unidad</th><th>Observación</th></tr></thead>
+            <tbody>
+                @foreach (var mov in MovimientosFiltrados)
+                {
+                    <tr>
+                        <td>@mov.Codigo</td><td>@mov.Fecha.ToString("dd/MM/yyyy")</td><td class="fw-semibold">@mov.Insumo</td>
+                        <td><span class="p3-tag @(mov.Tipo == "Entrada" ? "p3-tag-green" : "p3-tag-danger")">@mov.Tipo</span></td>
+                        <td class="fw-semibold">@(mov.Tipo == "Entrada" ? "+" : "−") @mov.Cantidad.ToString("0.##")</td>
+                        <td>@mov.Unidad</td><td>@mov.Observacion</td>
+                    </tr>
+                }
+                @if (MovimientosFiltrados.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-secondary py-4">No se encontraron movimientos con los filtros seleccionados.</td></tr>
+                }
+            </tbody>
+        </table></div>
+    </section>
+    <div class="d-flex flex-wrap gap-2 mt-4"><a class="btn p3-btn-outline" href="/admin/insumos">← Volver a insumos</a><a class="btn p3-btn-outline" href="/admin/inventario/alertas">Ver alertas de stock →</a></div>
+</div>
+
+<div class="modal fade" id="p3NuevoMovimiento" tabindex="-1" aria-labelledby="p3NuevoMovimientoTitulo" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p3-modal">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="p3NuevoMovimientoTitulo">Registrar movimiento</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label for="p3MovInsumo" class="form-label">Insumo</label><select id="p3MovInsumo" class="form-select"><option>Seleccione un insumo...</option><option>Arroz</option><option>Cecina</option><option>Plátano bellaco</option><option>Aceite vegetal</option><option>Sal</option><option>Hoja de bijao</option><option>Tomates</option></select></div>
+        <div class="row g-3 mb-3"><div class="col-sm-6"><label for="p3MovTipo" class="form-label">Tipo de movimiento</label><select id="p3MovTipo" class="form-select"><option>Entrada</option><option>Salida</option></select></div><div class="col-sm-6"><label for="p3MovCantidad" class="form-label">Cantidad</label><input id="p3MovCantidad" type="number" min="0" step="0.01" class="form-control" placeholder="0.00" /></div></div>
+        <div class="mb-3"><label for="p3MovFecha" class="form-label">Fecha</label><input id="p3MovFecha" type="date" class="form-control" value="2026-10-26" /></div>
+        <div><label for="p3MovMotivo" class="form-label">Observación</label><textarea id="p3MovMotivo" class="form-control" rows="2" placeholder="Reposición, merma..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p3-btn-primary" data-bs-dismiss="modal">Guardar</button></div>
+</div></div></div>
+
+@code {
+    private string fecha = "";
+    private string tipo = "";
+    private string insumo = "";
+    private string fechaAplicada = "";
+    private string tipoAplicado = "";
+    private string insumoAplicado = "";
+
+    private readonly List<MovimientoDato> movimientos = new()
+    {
+        new("MOV-021", new DateOnly(2026, 10, 26), "Arroz", "Entrada", 10.00m, "kg", "Reposición de almacén"),
+        new("MOV-020", new DateOnly(2026, 10, 26), "Plátano bellaco", "Salida", 6m, "unidades", "Merma"),
+        new("MOV-019", new DateOnly(2026, 10, 25), "Cecina", "Entrada", 8.00m, "kg", "Reposición manual"),
+        new("MOV-018", new DateOnly(2026, 10, 24), "Aceite vegetal", "Salida", 1.00m, "L", "Derrame"),
+        new("MOV-017", new DateOnly(2026, 10, 23), "Sal", "Entrada", 2.00m, "kg", "Reposición de almacén"),
+        new("MOV-016", new DateOnly(2026, 10, 22), "Hoja de bijao", "Salida", 7m, "unidades", "Producto dañado")
+    };
+
+    private List<MovimientoDato> MovimientosFiltrados => movimientos.Where(m =>
+        (string.IsNullOrEmpty(fechaAplicada) || m.Fecha.ToString("yyyy-MM-dd") == fechaAplicada) &&
+        (string.IsNullOrEmpty(tipoAplicado) || m.Tipo == tipoAplicado) &&
+        (string.IsNullOrEmpty(insumoAplicado) || m.Insumo == insumoAplicado)).ToList();
+
+    private void ActualizarFecha(ChangeEventArgs e)
+    {
+        fecha = e.Value?.ToString() ?? "";
+    }
+
+    private void AplicarFiltros()
+    {
+        fechaAplicada = fecha;
+        tipoAplicado = tipo;
+        insumoAplicado = insumo;
+    }
+
+    private void LimpiarFiltros()
+    {
+        fecha = "";
+        tipo = "";
+        insumo = "";
+        AplicarFiltros();
+    }
+
+    private record MovimientoDato(string Codigo, DateOnly Fecha, string Insumo, string Tipo, decimal Cantidad, string Unidad, string Observacion);
+}

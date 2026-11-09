@@ -1,0 +1,137 @@
+@page "/atencion/mozo"
+@layout MozoLayout
+@using RinconSatipenoWeb.Models.Atencion
+@inject AtencionApiService Api
+@inject NavigationManager Navegacion
+
+<PageTitle>Panel del mozo | El Rincón Satipeño</PageTitle>
+
+<div class="rs-atn-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <div class="rs-atn-overline">ATENCIÓN EN SALÓN</div>
+        <h1>Panel del mozo</h1>
+        <p class="text-secondary mb-0">Hola, @Sesion.Sesion?.Nombre. Revisa tus mesas y continúa las atenciones pendientes.</p>
+    </div>
+    <span class="rs-atn-pill rs-atn-free">Servicio de salón</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mesas asignadas</span><strong>@mesas.Count</strong><small>Distribución actual</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>En atención</span><strong>@mesas.Count(m => m.Estado == "OCUPADA")</strong><small>Cuentas abiertas</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Próximas reservas</span><strong>@mesas.Count(m => m.Estado == "RESERVADA")</strong><small>Pendientes de llegada</small></div></div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(aviso))
+{
+    <div class="alert alert-danger" role="alert">@aviso</div>
+}
+
+<section class="rs-atn-card p-3 p-md-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="h5 mb-1">Mis mesas</h2>
+            <p class="text-secondary small mb-0">Solo se muestran las mesas asignadas a tu cuenta.</p>
+        </div>
+        <select class="form-select" style="max-width: 210px" @bind="filtro">
+            <option value="Todos">Todos los estados</option>
+            <option value="OCUPADA">Ocupadas</option>
+            <option value="RESERVADA">Reservadas</option>
+            <option value="LIBRE">Libres</option>
+        </select>
+    </div>
+    @if (cargando)
+    {
+        <p class="text-secondary">Cargando tus mesas...</p>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var mesa in MesasVisibles)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <article class="rs-atn-mesa-card h-100 d-flex flex-column">
+                        <div class="d-flex align-items-start justify-content-between mb-3">
+                            <div class="rs-atn-table-icon" aria-hidden="true">🍽️</div>
+                            <span class="rs-atn-pill @ClaseEstado(mesa.Estado)">@EstadoTexto(mesa.Estado)</span>
+                        </div>
+                        <h3 class="h5 mb-1">Mesa @mesa.Numero.ToString("00")</h3>
+                        <p class="text-secondary small mb-3">@ZonaTexto(mesa.Zona) · Capacidad: @mesa.Capacidad personas</p>
+                        @if (mesa.Estado == "OCUPADA")
+                        {
+                            <a class="btn rs-btn-primary w-100 mt-auto" href="@($"/atencion/mesa/{mesa.Id}")">Atender mesa →</a>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn rs-btn-outline w-100 mt-auto" disabled="@procesando" @onclick="() => IniciarAtencion(mesa)">
+                                @(mesa.Estado == "RESERVADA" ? "Registrar llegada" : "Iniciar atención")
+                            </button>
+                        }
+                    </article>
+                </div>
+            }
+            @if (!MesasVisibles.Any())
+            {
+                <div class="col-12 text-secondary text-center py-4">No tienes mesas asignadas con este filtro.</div>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Inject] private SesionEmpleadoService Sesion { get; set; } = default!;
+    private List<MesaAtencionDTO> mesas = new();
+    private string filtro = "Todos";
+    private string aviso = "";
+    private bool cargando = true;
+    private bool procesando;
+
+    private IEnumerable<MesaAtencionDTO> MesasVisibles => mesas.Where(m => filtro == "Todos" || m.Estado == filtro);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            mesas = await Api.ObtenerMesasAsync();
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task IniciarAtencion(MesaAtencionDTO mesa)
+    {
+        procesando = true;
+        aviso = "";
+        try
+        {
+            await Api.IniciarAtencionAsync(mesa.Id);
+            Navegacion.NavigateTo($"/atencion/mesa/{mesa.Id}");
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+            procesando = false;
+        }
+    }
+
+    private static string ZonaTexto(string zona) => zona == "SALON_PRINCIPAL" ? "Salón principal" : "Terraza";
+    private static string EstadoTexto(string estado) => estado switch
+    {
+        "LIBRE" => "Libre",
+        "OCUPADA" => "Ocupada",
+        "RESERVADA" => "Reservada",
+        _ => estado
+    };
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        "LIBRE" => "rs-atn-free",
+        "RESERVADA" => "rs-atn-reserved",
+        "OCUPADA" => "rs-atn-busy",
+        _ => "rs-atn-neutral"
+    };
+}

@@ -1,0 +1,116 @@
+@page "/atencion/pago/{Id:int}"
+@layout MozoLayout
+@using RinconSatipenoWeb.Models.Atencion
+@inject AtencionApiService Api
+@inject NavigationManager Navegacion
+
+<PageTitle>Verificación de pago | El Rincón Satipeño</PageTitle>
+
+@if (cargando)
+{
+    <p class="text-secondary">Preparando el código QR...</p>
+}
+else if (cuenta is null)
+{
+    <div class="rs-atn-card p-4">
+        <h1>Comprobante no disponible</h1>
+        <p>@aviso</p>
+        <a class="btn rs-btn-primary" href="/atencion/mozo">Volver al panel</a>
+    </div>
+}
+else
+{
+    <div class="rs-atn-confirm-wrap">
+        <section class="rs-atn-card p-4 p-md-5 text-center">
+            <div class="rs-atn-overline">PAGO SIMULADO · MESA @cuenta.Mesa.ToString("00")</div>
+            <h1 class="mt-2 mb-2">Código QR para el cliente</h1>
+            <p class="text-secondary mb-4">Muestra este código al cliente. Al escanearlo podrá revisar el detalle de su cuenta.</p>
+
+            <div class="d-inline-flex flex-column align-items-center p-3 border rounded-3 bg-white mb-4">
+                <img src="@QrUrl" alt="Código QR para consultar el comprobante de la mesa @cuenta.Mesa" width="240" height="240" />
+                <span class="small text-secondary mt-2">Escanea para consultar el comprobante</span>
+            </div>
+
+            <div class="rs-atn-receipt text-start mb-4">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                    <strong>Resumen de la cuenta</strong>
+                    <span class="rs-atn-pill rs-atn-reserved">Pendiente de verificación</span>
+                </div>
+                <div class="rs-atn-price-line"><span>Referencia</span><strong>@cuenta.Referencia</strong></div>
+                <div class="rs-atn-price-line"><span>Medio de pago</span><strong>@cuenta.MedioPago</strong></div>
+                <div class="rs-atn-price-line"><span>Comprobante</span><strong>@cuenta.TipoComprobante</strong></div>
+                <div class="rs-atn-price-line"><span>Valor de venta</span><strong>S/ @cuenta.Subtotal.ToString("0.00")</strong></div>
+                <div class="rs-atn-price-line"><span>IGV (18 %)</span><strong>S/ @cuenta.Igv.ToString("0.00")</strong></div>
+                <hr />
+                <div class="rs-atn-price-line rs-atn-grand-total"><span>Total a pagar</span><strong>S/ @cuenta.Total.ToString("0.00")</strong></div>
+            </div>
+
+            <div class="alert alert-info text-start">
+                Cuando el cliente te muestre el comprobante en su teléfono, verifica los datos y registra la confirmación.
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(aviso))
+            {
+                <div class="alert alert-danger">@aviso</div>
+            }
+
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <a class="btn rs-btn-outline" href="@UrlComprobante" target="_blank">Abrir comprobante del cliente</a>
+                <button type="button" class="btn rs-btn-primary" @onclick="ConfirmarPago" disabled="@procesando">
+                    @(procesando ? "Registrando..." : "Confirmar pago recibido")
+                </button>
+            </div>
+            <p class="small text-secondary mt-3 mb-0">La cuenta solo se cerrará cuando el mozo confirme el pago.</p>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [SupplyParameterFromQuery(Name = "token")] public string? Token { get; set; }
+    private CuentaConsumoDTO? cuenta;
+    private string aviso = "";
+    private bool cargando = true;
+    private bool procesando;
+
+    private string UrlComprobante => new Uri(new Uri(Navegacion.BaseUri), $"cliente/comprobante/{Token}").ToString();
+    private string QrUrl => "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + Uri.EscapeDataString(UrlComprobante);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        cargando = true;
+        try
+        {
+            cuenta = await Api.ObtenerCuentaAsync(Id);
+            if (string.IsNullOrWhiteSpace(Token) || cuenta.Token != Token)
+                cuenta = null;
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task ConfirmarPago()
+    {
+        aviso = "";
+        procesando = true;
+        try
+        {
+            await Api.ConfirmarPagoAsync(Id);
+            Navegacion.NavigateTo("/atencion/mozo");
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+}

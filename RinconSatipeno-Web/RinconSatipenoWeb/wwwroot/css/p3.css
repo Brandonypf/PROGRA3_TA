@@ -1,0 +1,45 @@
+/* P3: estilos propios del módulo de platos e inventario; no afectan las pantallas P1. */
+.p3-page { --p3-green: #264D3B; --p3-gold: #E4A64B; --p3-cream: #F8F5EF; --p3-coral: #E27D60; --p3-teal: #4D8C85; --p3-dark: #303B35; color: var(--p3-dark); font-family: 'Segoe UI', system-ui, sans-serif; background: var(--p3-cream); min-height: 100vh; }
+.p3-page > nav { color: #7c867f; }
+.p3-page > nav a, .p3-link { color: #38634c; text-decoration: none; font-weight: 600; }
+.p3-page > nav a:hover, .p3-link:hover { text-decoration: underline; }
+.p3-title { color: #264D3B; font-weight: 750; font-size: clamp(1.5rem, 3vw, 2rem); }
+.p3-subtitle { color: #748078; }
+.p3-green { color: #264D3B; }
+.p3-eyebrow { font-size: .72rem; font-weight: 750; letter-spacing: .13em; color: #a17437; }
+.p3-card, .p3-stat { background: #fff; border: 1px solid #e7e5dd; border-radius: 14px; box-shadow: 0 4px 18px rgba(29,55,40,.045); }
+.p3-card { padding: 22px; }
+.p3-stat { padding: 19px 20px; height: 100%; border-left: 4px solid #4D8C85; }
+.p3-stat span { display: block; color: #6d7c70; font-size: .86rem; font-weight: 600; }
+.p3-stat strong { display: block; color: #264D3B; font-size: 1.85rem; margin: 4px 0; line-height: 1.2; }
+.p3-stat small { display: block; color: #88938a; font-size: .76rem; }
+.p3-stat-warning { border-left-color: #E4A64B; }
+.p3-table-title { padding: 18px 20px; border-bottom: 1px solid #e9eae4; color: #264D3B; }
+.p3-table thead th { background: #f4f7f2; color: #4f6656; border-bottom: 1px solid #e4e9e2; font-size: .78rem; font-weight: 750; text-transform: uppercase; letter-spacing: .025em; padding: 14px 15px; white-space: nowrap; }
+.p3-table tbody td { padding: 14px 15px; font-size: .88rem; color: #49564d; border-color: #eef0ea; }
+.p3-table tbody tr:nth-child(even) { background: #fcfdfb; }
+.p3-page .form-label, .p3-modal .form-label { font-weight: 600; font-size: .88rem; color: #405448; }
+.p3-page .form-control, .p3-page .form-select, .p3-modal .form-control, .p3-modal .form-select { border-radius: 9px; border-color: #d5ded5; min-height: 42px; }
+.p3-page .form-control:focus, .p3-page .form-select:focus, .p3-modal .form-control:focus, .p3-modal .form-select:focus { border-color: #6b9b7a; box-shadow: 0 0 0 .2rem rgba(57,115,77,.12); }
+.p3-btn-primary { background: #264D3B; color: #fff; border: 1px solid #264D3B; border-radius: 9px; font-weight: 600; padding: .58rem 1rem; }
+.p3-btn-primary:hover { background: #1c3a2c; color: #fff; border-color: #1c3a2c; }
+.p3-btn-outline { background: #fff; color: #264D3B; border: 1px solid #b8cbbd; border-radius: 9px; font-weight: 600; padding: .58rem 1rem; }
+.p3-btn-outline:hover { color: #264D3B; background: #edf4ec; border-color: #6c9377; }
+.p3-btn-edit { background: #edf5f0; color: #33654a; border: 1px solid #d1e6d7; border-radius: 8px; font-weight: 600; }
+.p3-btn-edit:hover { background: #dcebdd; color: #245338; }
+.p3-btn-danger { background: #fff0eb; color: #a54e3b; border: 1px solid #f2c9bc; border-radius: 8px; font-weight: 600; }
+.p3-btn-danger:hover { background: #E27D60; color: #fff; border-color: #E27D60; }
+.p3-tag { display: inline-block; border-radius: 40px; font-size: .75rem; font-weight: 700; padding: 5px 10px; white-space: nowrap; }
+.p3-tag-green { color: #246346; background: #e0f0e4; }
+.p3-tag-gold { color: #886326; background: #fff0cf; }
+.p3-tag-teal { color: #236969; background: #e0f1ef; }
+.p3-tag-neutral { color: #656d65; background: #eff1ed; }
+.p3-tag-danger { color: #a34737; background: #fce6df; }
+.p3-ingredient-list .list-group-item { border-color: #edf0e9; color: #4b5b50; padding: 12px 0; }
+.p3-ingredient-list strong { color: #264D3B; }
+.p3-modal { border: 0; border-radius: 14px; box-shadow: 0 15px 45px rgba(20,50,30,.16); }
+.p3-modal .modal-header { background: #f7faf6; }
+.p3-modal .modal-title { color: #264D3B; font-weight: 700; }
+.p3-critical { background: #fff0eb; border: 1px solid #f3c8ba; border-left: 4px solid #E27D60; border-radius: 12px; padding: 18px; color: #8e4736; }
+.p3-critical-icon { flex: 0 0 34px; background: #E27D60; color: white; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; font-weight: 800; }
+@media(max-width: 767px) { .p3-card { padding: 17px; } .p3-stat { padding: 15px; } .p3-table tbody td { padding: 12px; } }

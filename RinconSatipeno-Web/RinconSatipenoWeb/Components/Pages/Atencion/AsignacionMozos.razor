@@ -1,0 +1,137 @@
+@page "/atencion/asignacion"
+@layout AdminLayout
+@using RinconSatipenoWeb.Models.Atencion
+@inject AtencionApiService Api
+
+<PageTitle>Asignación de mozos | El Rincón Satipeño</PageTitle>
+
+<div class="rs-atn-heading d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <div class="rs-atn-overline">ADMINISTRACIÓN · SALÓN</div>
+        <h1>Asignación de mozos</h1>
+        <p class="text-secondary mb-0">Organiza las mesas y al personal encargado de cada atención.</p>
+    </div>
+    <a class="btn rs-btn-outline" href="/admin/mesas/estado">← Estado de mesas</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mesas totales</span><strong>@mesas.Count</strong><small>Salón y terraza</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mesas ocupadas</span><strong>@mesas.Count(m => m.Estado == "OCUPADA")</strong><small>Atenciones en curso</small></div></div>
+    <div class="col-sm-4"><div class="rs-atn-stat"><span>Mozos del turno</span><strong>@mozos.Count</strong><small>Personal disponible</small></div></div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(aviso))
+{
+    <div class="alert @(error ? "alert-danger" : "alert-success")" role="status">@aviso</div>
+}
+
+<section class="rs-atn-card p-3 p-md-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h5 mb-1">Distribución de mesas</h2>
+            <p class="text-secondary small mb-0">La asignación se guarda al seleccionar al responsable.</p>
+        </div>
+    </div>
+    @if (cargando)
+    {
+        <p class="text-secondary">Cargando mesas y personal...</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle rs-atn-table mb-0">
+                <thead><tr><th>Mesa</th><th>Zona</th><th>Capacidad</th><th>Estado</th><th>Mozo asignado</th></tr></thead>
+                <tbody>
+                    @foreach (var mesa in mesas)
+                    {
+                        <tr>
+                            <td class="fw-semibold">Mesa @mesa.Numero.ToString("00")</td>
+                            <td>@ZonaTexto(mesa.Zona)</td>
+                            <td>@mesa.Capacidad personas</td>
+                            <td><span class="rs-atn-pill @ClaseEstado(mesa.Estado)">@EstadoTexto(mesa.Estado)</span></td>
+                            <td>
+                                <select class="form-select form-select-sm rs-atn-select"
+                                        value="@mesa.IdMozo"
+                                        aria-label="Mozo de mesa @mesa.Numero"
+                                        @onchange="e => CambiarAsignacion(mesa, e)">
+                                    <option value="">Sin asignar</option>
+                                    @foreach (var mozo in mozos)
+                                    {
+                                        <option value="@mozo.Id">@mozo.Nombre</option>
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
+                    @if (mesas.Count == 0)
+                    {
+                        <tr><td colspan="5" class="text-center text-secondary py-4">No hay mesas registradas.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    private List<MesaAtencionDTO> mesas = new();
+    private List<MozoDTO> mozos = new();
+    private bool cargando = true;
+    private bool error;
+    private string aviso = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            mesas = await Api.ObtenerMesasAsync();
+            mozos = await Api.ObtenerMozosAsync();
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+            error = true;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task CambiarAsignacion(MesaAtencionDTO mesa, ChangeEventArgs e)
+    {
+        var idMozo = int.TryParse(e.Value?.ToString(), out var seleccionado) ? seleccionado : 0;
+
+        try
+        {
+            await Api.AsignarMozoAsync(mesa.Id, idMozo);
+            mesa.IdMozo = idMozo == 0 ? null : idMozo;
+            mesa.Mozo = mozos.FirstOrDefault(m => m.Id == idMozo)?.Nombre;
+            aviso = idMozo == 0
+                ? $"Se retiró la asignación de la mesa {mesa.Numero:00}."
+                : $"La mesa {mesa.Numero:00} fue asignada correctamente.";
+            error = false;
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+            error = true;
+        }
+    }
+
+    private static string ZonaTexto(string zona) => zona == "SALON_PRINCIPAL" ? "Salón principal" : "Terraza";
+    private static string EstadoTexto(string estado) => estado switch
+    {
+        "LIBRE" => "Libre",
+        "OCUPADA" => "Ocupada",
+        "RESERVADA" => "Reservada",
+        _ => estado
+    };
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        "LIBRE" => "rs-atn-free",
+        "RESERVADA" => "rs-atn-reserved",
+        "OCUPADA" => "rs-atn-busy",
+        _ => "rs-atn-neutral"
+    };
+}

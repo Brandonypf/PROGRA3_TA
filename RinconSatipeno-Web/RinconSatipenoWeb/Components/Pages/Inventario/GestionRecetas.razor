@@ -1,0 +1,147 @@
+@using RinconSatipenoWeb.Components.Data
+@page "/admin/recetas"
+
+<PageTitle>Gestión de recetas | El Rincón Satipeño</PageTitle>
+<HeadContent><link rel="stylesheet" href="/css/p3.css" /></HeadContent>
+
+<div class="p3-page container-fluid py-4 px-3 px-lg-4">
+    <nav aria-label="Ubicación" class="small mb-2"><a href="/">Inicio</a> / Administración / Recetas</nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><h1 class="p3-title mb-1">Gestión de recetas</h1><p class="p3-subtitle mb-0">Relaciona los productos con los insumos y cantidades de preparación.</p></div>
+        <button type="button" class="btn p3-btn-primary" data-bs-toggle="modal" data-bs-target="#p3NuevaReceta">+ Nueva receta</button>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="p3-stat"><span>Recetas registradas</span><strong>@recetas.Count</strong><small>Preparaciones</small></div></div>
+        <div class="col-md-4"><div class="p3-stat"><span>Platos con receta</span><strong>@recetas.Count</strong><small>De 6 productos</small></div></div>
+        <div class="col-md-4"><div class="p3-stat"><span>Insumos asociados</span><strong>@(recetas.Sum(r => r.Ingredientes.Count))</strong><small>En distintas preparaciones</small></div></div>
+    </div>
+    <section class="p3-card mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-7"><label for="p3FiltrarReceta" class="form-label">Filtrar por producto</label><select id="p3FiltrarReceta" class="form-select" @bind="platoFiltro"><option value="">Todos los productos</option>@foreach (var receta in recetas) { <option value="@receta.Plato">@receta.Plato</option> }</select></div>
+            <div class="col-md-5 d-flex gap-2"><button type="button" class="btn p3-btn-outline flex-fill" @onclick="AplicarFiltro">Buscar receta</button><button type="button" class="btn btn-light border flex-fill" @onclick="LimpiarFiltro">Limpiar</button></div>
+        </div>
+    </section>
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <section class="p3-card p-0 overflow-hidden h-100">
+                <div class="p3-table-title d-flex justify-content-between align-items-center gap-2"><h2 class="h6 mb-0">Recetas registradas</h2><span class="text-secondary small">@RecetasFiltradas.Count de @recetas.Count recetas</span></div>
+                <div class="table-responsive"><table class="table table-hover align-middle mb-0 p3-table">
+                    <thead><tr><th>Código</th><th>Plato</th><th>Descripción</th><th>Insumos</th><th class="text-end">Acciones</th></tr></thead>
+                    <tbody>
+                        @foreach (var receta in RecetasFiltradas)
+                        {
+                            <tr>
+                                <td>@receta.Codigo</td><td class="fw-semibold">@receta.Plato</td><td>@receta.Descripcion</td><td>@receta.Ingredientes.Count</td>
+                                <td class="text-end text-nowrap">
+                                    <button type="button" class="btn btn-sm p3-btn-outline me-1" @onclick="() => SeleccionarReceta(receta)">Ver detalle</button>
+                                    <button type="button" class="btn btn-sm p3-btn-edit" @onclick="() => SeleccionarReceta(receta)" data-bs-toggle="modal" data-bs-target="#p3EditarReceta">Editar</button>
+                                </td>
+                            </tr>
+                        }
+                        @if (RecetasFiltradas.Count == 0)
+                        {
+                            <tr><td colspan="5" class="text-center text-secondary py-4">No se encontraron recetas.</td></tr>
+                        }
+                    </tbody>
+                </table></div>
+            </section>
+        </div>
+        <div class="col-xl-5">
+            <section class="p3-card h-100">
+                <span class="p3-eyebrow">DETALLE DE LA RECETA</span>
+                @if (RecetaDetalle is not null)
+                {
+                    <h2 class="h5 p3-green mt-1">@RecetaDetalle.Plato</h2>
+                    <p class="p3-subtitle small">Receta @RecetaDetalle.Codigo · Cantidades por porción</p>
+                    <ul class="list-group list-group-flush p3-ingredient-list">
+                        @foreach (var ingrediente in RecetaDetalle.Ingredientes)
+                        {
+                            <li class="list-group-item d-flex justify-content-between"><span>@ingrediente.Nombre</span><strong>@ingrediente.Cantidad</strong></li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-secondary mb-0 mt-3">No hay una receta para mostrar.</p>
+                }
+                <a class="btn p3-btn-outline w-100 mt-3" href="/admin/insumos">Consultar insumos →</a>
+            </section>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-4"><a class="btn p3-btn-outline" href="/admin/productos">← Volver a productos</a><a class="btn p3-btn-outline" href="/admin/insumos">Gestión de insumos →</a></div>
+</div>
+
+<div class="modal fade" id="p3NuevaReceta" tabindex="-1" aria-labelledby="p3NuevaRecetaTitulo" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content p3-modal">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="p3NuevaRecetaTitulo">Registrar receta</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+        <div class="row g-3"><div class="col-md-6"><label for="p3RecetaPlato" class="form-label">Plato asociado</label><select id="p3RecetaPlato" class="form-select"><option>Seleccione un producto</option>@foreach (var producto in CartaRestaurante.Platos) { <option>@producto.Nombre</option> }</select></div><div class="col-md-6"><label for="p3RecetaDescripcion" class="form-label">Descripción de preparación</label><input id="p3RecetaDescripcion" class="form-control" placeholder="Descripción breve" /></div></div>
+        <h3 class="h6 mt-4">Insumos requeridos</h3>
+        <div class="row g-2 mb-2"><div class="col-md-6"><label class="form-label" for="p3RecetaInsumo1">Insumo 1</label><select id="p3RecetaInsumo1" class="form-select"><option>Seleccione...</option><option>Cecina</option><option>Plátano bellaco</option><option>Arroz</option><option>Sal</option></select></div><div class="col-md-3"><label class="form-label" for="p3RecetaCant1">Cantidad</label><input id="p3RecetaCant1" class="form-control" type="number" min="0" step="0.01" placeholder="0.00" /></div><div class="col-md-3"><label class="form-label" for="p3RecetaUnidad1">Unidad</label><select id="p3RecetaUnidad1" class="form-select"><option>kg</option><option>g</option><option>L</option><option>unidades</option></select></div></div>
+        <div class="row g-2"><div class="col-md-6"><label class="form-label" for="p3RecetaInsumo2">Insumo 2</label><select id="p3RecetaInsumo2" class="form-select"><option>Seleccione...</option><option>Cecina</option><option>Plátano bellaco</option><option>Arroz</option><option>Sal</option></select></div><div class="col-md-3"><label class="form-label" for="p3RecetaCant2">Cantidad</label><input id="p3RecetaCant2" class="form-control" type="number" min="0" step="0.01" placeholder="0.00" /></div><div class="col-md-3"><label class="form-label" for="p3RecetaUnidad2">Unidad</label><select id="p3RecetaUnidad2" class="form-select"><option>kg</option><option>g</option><option>L</option><option>unidades</option></select></div></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p3-btn-primary" data-bs-dismiss="modal">Guardar</button></div>
+</div></div></div>
+<div class="modal fade" id="p3EditarReceta" tabindex="-1" aria-labelledby="p3EditarRecetaTitulo" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content p3-modal">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="p3EditarRecetaTitulo">Editar receta</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+    <div class="modal-body">
+        <div class="mb-3"><label for="p3EditarRecetaPlato" class="form-label">Plato asociado</label><input id="p3EditarRecetaPlato" class="form-control" value="@RecetaDetalle?.Plato" readonly /></div>
+        <label for="p3EditarRecetaDesc" class="form-label">Descripción</label><textarea id="p3EditarRecetaDesc" class="form-control" rows="3">@RecetaDetalle?.Descripcion</textarea>
+        <h3 class="h6 mt-4">Ingredientes asociados</h3>
+        @if (RecetaDetalle is not null)
+        {
+            @foreach (var ingrediente in RecetaDetalle.Ingredientes)
+            {
+                <div class="d-flex justify-content-between py-2 border-bottom"><span>@ingrediente.Nombre</span><strong>@ingrediente.Cantidad</strong></div>
+            }
+        }
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn p3-btn-primary" data-bs-dismiss="modal">Guardar</button></div>
+</div></div></div>
+
+@code {
+    private string platoFiltro = "";
+    private string platoAplicado = "";
+    private RecetaDato? recetaSeleccionada;
+
+    private readonly List<RecetaDato> recetas = new()
+    {
+        new("RC-001", "Arroz con pollo", "Arroz con culantro y presa de pollo.", new()
+        {
+            new("Pollo", "0.25 kg"), new("Arroz", "0.15 kg"), new("Culantro", "0.03 kg"), new("Sal", "0.01 kg")
+        }),
+        new("RC-002", "Juane de gallina", "Arroz sazonado envuelto en hoja.", new()
+        {
+            new("Arroz", "0.15 kg"), new("Gallina", "0.25 kg"), new("Hoja de bijao", "1 unidad"), new("Huevo", "1 unidad"), new("Aceite vegetal", "0.02 L")
+        }),
+        new("RC-003", "Ensalada fresca del huerto", "Ensalada con vegetales de temporada.", new()
+        {
+            new("Tomates", "0.10 kg"), new("Lechuga", "0.08 kg"), new("Aceite vegetal", "0.01 L")
+        }),
+        new("RC-004", "Tequeños de queso (6 unidades)", "Seis tequeños de queso y salsa de palta.", new()
+        {
+            new("Harina", "0.12 kg"), new("Queso", "0.10 kg"), new("Aceite vegetal", "0.03 L")
+        })
+    };
+
+    private List<RecetaDato> RecetasFiltradas => recetas.Where(r => string.IsNullOrEmpty(platoAplicado) || r.Plato == platoAplicado).ToList();
+
+    private RecetaDato? RecetaDetalle => recetaSeleccionada is not null && RecetasFiltradas.Contains(recetaSeleccionada)
+        ? recetaSeleccionada : RecetasFiltradas.FirstOrDefault();
+
+    private void AplicarFiltro()
+    {
+        platoAplicado = platoFiltro;
+        recetaSeleccionada = null;
+    }
+
+    private void LimpiarFiltro()
+    {
+        platoFiltro = "";
+        AplicarFiltro();
+    }
+
+    private void SeleccionarReceta(RecetaDato receta) => recetaSeleccionada = receta;
+
+    private record IngredienteDato(string Nombre, string Cantidad);
+    private record RecetaDato(string Codigo, string Plato, string Descripcion, List<IngredienteDato> Ingredientes);
+}

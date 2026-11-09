@@ -1,0 +1,309 @@
+@page "/admin/mesas"
+
+<PageTitle>Gestión de mesas | El Rincón Satipeño</PageTitle>
+
+<div class="admin-page-heading">
+    <div>
+        <span class="admin-eyebrow">ADMINISTRACIÓN / MESAS</span>
+        <h1>Gestión de mesas</h1>
+        <p>Organiza las mesas, capacidades y ambientes del restaurante.</p>
+    </div>
+
+    <button class="btn btn-primary" @onclick="Registrar">
+        <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
+        Registrar mesa
+    </button>
+</div>
+
+<section class="card mb-4">
+    <div class="card-body row g-3 align-items-end">
+        <div class="col-md-6">
+            <label for="buscarMesa" class="form-label">
+                Buscar por número o ambiente
+            </label>
+            <input id="buscarMesa"
+                   class="form-control"
+                   placeholder="Número de mesa o ambiente"
+                   @bind="busqueda"
+                   @bind:event="oninput" />
+        </div>
+
+        <div class="col-md-4">
+            <label for="estadoGestion" class="form-label">Estado</label>
+            <select id="estadoGestion" class="form-select" @bind="estado">
+                <option value="">Todos</option>
+                <option>Libre</option>
+                <option>Reservada</option>
+                <option>Ocupada</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary w-100" @onclick="Limpiar">
+                Limpiar
+            </button>
+        </div>
+    </div>
+</section>
+
+@if (mostrarFormulario)
+{
+    <section class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">
+                @(editando ? "Editar mesa" : "Registrar mesa")
+            </h2>
+
+            <p class="small text-secondary">
+                Completa la información de la mesa.
+            </p>
+
+            <form @onsubmit="Guardar" @onsubmit:preventDefault>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label" for="numeroMesa">
+                            Número de mesa
+                        </label>
+                        <input id="numeroMesa"
+                               class="form-control"
+                               type="number"
+                               min="1"
+                               max="99"
+                               required
+                               @bind="numero" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label" for="capacidadMesa">
+                            Capacidad (personas)
+                        </label>
+                        <input id="capacidadMesa"
+                               class="form-control"
+                               type="number"
+                               min="1"
+                               max="20"
+                               required
+                               @bind="capacidad" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label" for="ambienteMesa">
+                            Ambiente
+                        </label>
+                        <select id="ambienteMesa"
+                                class="form-select"
+                                @bind="ambiente">
+                            <option>Salón principal</option>
+                            <option>Terraza</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label" for="situacionMesa">
+                            Estado
+                        </label>
+                        <select id="situacionMesa"
+                                class="form-select"
+                                @bind="situacion">
+                            <option>Libre</option>
+                            <option>Reservada</option>
+                            <option>Ocupada</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="observacionMesa">
+                            Observaciones
+                        </label>
+                        <textarea id="observacionMesa"
+                                  class="form-control"
+                                  rows="2"
+                                  maxlength="250"
+                                  @bind="observacion"></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                        Guardar
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            @onclick="() => mostrarFormulario = false">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+}
+
+@if (porEliminar is not null)
+{
+    <section class="alert alert-warning" aria-labelledby="eliminarTitulo">
+        <h2 id="eliminarTitulo" class="h5">
+            Eliminar mesa @porEliminar.Numero.ToString("00")
+        </h2>
+
+        <p>¿Deseas eliminar esta mesa?</p>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-danger" @onclick="Eliminar">
+                <i class="bi bi-trash me-1" aria-hidden="true"></i>
+                Eliminar
+            </button>
+
+            <button class="btn btn-outline-secondary"
+                    @onclick="() => porEliminar = null">
+                Cancelar
+            </button>
+        </div>
+    </section>
+}
+
+<section class="card">
+    <div class="card-body border-bottom d-flex flex-wrap justify-content-between gap-2">
+        <h2 class="h5 mb-0">Mesas del restaurante</h2>
+        <span class="text-secondary">@Filtradas.Count() resultados</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <caption class="px-3">Listado de mesas del restaurante</caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Mesa</th>
+                    <th scope="col">Capacidad</th>
+                    <th scope="col">Ambiente</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var mesa in Filtradas)
+                {
+                    <tr>
+                        <td class="fw-semibold">
+                            @mesa.Numero.ToString("00")
+                        </td>
+                        <td>@mesa.Capacidad personas</td>
+                        <td>@mesa.Zona</td>
+                        <td>
+                            <span class="admin-status @DatosMesasDemo.ClaseEstado(mesa.Estado)">
+                                @mesa.Estado
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-secondary"
+                                        @onclick="() => Editar(mesa)"
+                                        aria-label="@($"Editar mesa {mesa.Numero}")">
+                                    <i class="bi bi-pencil me-1" aria-hidden="true"></i>
+                                    Editar
+                                </button>
+
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="() => ConfirmarEliminar(mesa)"
+                                        aria-label="@($"Eliminar mesa {mesa.Numero}")">
+                                    <i class="bi bi-trash me-1" aria-hidden="true"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+
+                @if (!Filtradas.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-secondary">
+                            No se encontraron mesas con estos filtros.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<a class="btn btn-outline-secondary mt-4" href="/admin/mesas/estado">
+    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+    Volver al estado de mesas
+</a>
+
+@code {
+    private string busqueda = "";
+    private string estado = "";
+
+    private bool mostrarFormulario;
+    private bool editando;
+
+    private int numero = 9;
+    private int capacidad = 4;
+
+    private string ambiente = "Salón principal";
+    private string situacion = "Libre";
+    private string observacion = "";
+
+    private MesaDemo? porEliminar;
+
+    private IEnumerable<MesaDemo> Filtradas =>
+        DatosMesasDemo.Mesas.Where(m =>
+            (estado == "" || m.Estado == estado) &&
+            (m.Numero.ToString("00").Contains(busqueda.Trim()) ||
+             m.Zona.Contains(
+                 busqueda.Trim(),
+                 StringComparison.OrdinalIgnoreCase)));
+
+    private void Limpiar()
+    {
+        busqueda = "";
+        estado = "";
+    }
+
+    private void Registrar()
+    {
+        editando = false;
+        numero = 9;
+        capacidad = 4;
+        ambiente = "Salón principal";
+        situacion = "Libre";
+        observacion = "";
+
+        mostrarFormulario = true;
+        porEliminar = null;
+    }
+
+    private void Editar(MesaDemo mesa)
+    {
+        editando = true;
+        numero = mesa.Numero;
+        capacidad = mesa.Capacidad;
+        ambiente = mesa.Zona;
+        situacion = mesa.Estado;
+        observacion = mesa.Detalle;
+
+        mostrarFormulario = true;
+        porEliminar = null;
+    }
+
+    private void Guardar()
+    {
+        mostrarFormulario = false;
+    }
+
+    private void ConfirmarEliminar(MesaDemo mesa)
+    {
+        porEliminar = mesa;
+        mostrarFormulario = false;
+    }
+
+    private void Eliminar()
+    {
+        porEliminar = null;
+    }
+}

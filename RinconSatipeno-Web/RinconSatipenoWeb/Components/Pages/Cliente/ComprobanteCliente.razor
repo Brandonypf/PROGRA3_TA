@@ -1,0 +1,108 @@
+@page "/cliente/comprobante/{Token}"
+@layout ClienteLayout
+@using RinconSatipenoWeb.Models.Atencion
+@using RinconSatipenoWeb.Servicios.Rest
+@inject AtencionApiService Api
+
+<PageTitle>Comprobante de cuenta | El Rincón Satipeño</PageTitle>
+
+<div class="container py-5" style="max-width: 900px">
+    @if (cargando)
+    {
+        <div class="rs-atn-card p-4 text-center"><p class="mb-0">Consultando el comprobante...</p></div>
+    }
+    else if (cuenta is null)
+    {
+        <div class="rs-atn-card p-4 text-center">
+            <h1 class="h3">Comprobante no disponible</h1>
+            <p class="text-secondary">@aviso</p>
+            <a href="/" class="btn rs-btn-primary">Volver al inicio</a>
+        </div>
+    }
+    else
+    {
+        <section class="rs-atn-card p-4 p-md-5">
+            <div class="text-center mb-4">
+                <div class="rs-atn-overline">EL RINCÓN SATIPEÑO · COMPROBANTE</div>
+                <h1 class="mt-2">Detalle de tu cuenta</h1>
+                <p class="text-secondary mb-2">Mesa @cuenta.Mesa.ToString("00") · @(cuenta.Zona == "SALON_PRINCIPAL" ? "Salón principal" : "Terraza")</p>
+                @if (cuenta.Estado == "PAGADA")
+                {
+                    <span class="rs-atn-pill rs-atn-free">Pago confirmado por el mozo</span>
+                }
+                else
+                {
+                    <span class="rs-atn-pill rs-atn-reserved">Pendiente de verificación del mozo</span>
+                }
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rs-atn-table align-middle">
+                    <thead><tr><th>Descripción</th><th class="text-center">Cantidad</th><th class="text-end">P. unitario</th><th class="text-end">Importe</th></tr></thead>
+                    <tbody>
+                        @foreach (var detalle in cuenta.Detalles)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@detalle.Nombre</td>
+                                <td class="text-center">@detalle.Cantidad</td>
+                                <td class="text-end">S/ @detalle.PrecioUnitario.ToString("0.00")</td>
+                                <td class="text-end">S/ @detalle.Importe.ToString("0.00")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row justify-content-end mt-4">
+                <div class="col-md-6">
+                    <div class="rs-atn-price-line"><span>Valor de venta</span><strong>S/ @cuenta.Subtotal.ToString("0.00")</strong></div>
+                    <div class="rs-atn-price-line"><span>IGV (18 %)</span><strong>S/ @cuenta.Igv.ToString("0.00")</strong></div>
+                    <hr />
+                    <div class="rs-atn-price-line rs-atn-grand-total"><span>Total</span><strong>S/ @cuenta.Total.ToString("0.00")</strong></div>
+                </div>
+            </div>
+
+            <div class="rs-atn-receipt mt-4">
+                <h2 class="h5 mb-3">Datos del comprobante</h2>
+                <div class="rs-atn-price-line"><span>Referencia</span><strong>@cuenta.Referencia</strong></div>
+                <div class="rs-atn-price-line"><span>Tipo de comprobante</span><strong>@cuenta.TipoComprobante</strong></div>
+                @if (cuenta.TipoComprobante == "Factura")
+                {
+                    <div class="rs-atn-price-line"><span>RUC</span><strong>@cuenta.Ruc</strong></div>
+                    <div class="rs-atn-price-line"><span>Razón social</span><strong>@cuenta.RazonSocial</strong></div>
+                }
+                <div class="rs-atn-price-line"><span>Medio de pago</span><strong>@cuenta.MedioPago</strong></div>
+                <div class="rs-atn-price-line"><span>Mozo</span><strong>@cuenta.Mozo</strong></div>
+                @if (cuenta.Estado == "PAGADA")
+                {
+                    <div class="rs-atn-price-line"><span>Fecha de confirmación</span><strong>@cuenta.Fecha</strong></div>
+                }
+            </div>
+            <p class="small text-secondary text-center mt-4 mb-0">Este documento corresponde a una simulación de pago y no representa una transacción bancaria real.</p>
+        </section>
+    }
+</div>
+
+@code {
+    [Parameter] public string Token { get; set; } = "";
+    private CuentaConsumoDTO? cuenta;
+    private string aviso = "";
+    private bool cargando = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        cargando = true;
+        try
+        {
+            cuenta = await Api.ObtenerComprobanteAsync(Token);
+        }
+        catch (Exception ex)
+        {
+            aviso = ex.Message;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}
